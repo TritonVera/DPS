@@ -1,234 +1,301 @@
-#!/usr/bin/env bash
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb 14 21:21:17 2020
+Created on Sat Feb 29 15:10:12 2020
 
 @author: Григорий
 @author: Ivan
 """
-import sys  # System function
-# import math
+from PyQt5.QtWidgets import QMainWindow, QGridLayout, QSizePolicy, \
+                            QMessageBox, QWidget, QGroupBox, QRadioButton, \
+                            QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
+                            QDoubleSpinBox, QCheckBox, QSpinBox
+from PyQt5.QtCore import Qt, QTimer
+from ExtUI import PlotPanel
+import Radiopulse
 
-from PyQt5.QtWidgets import QApplication
-from UI import DemoWindow as UI  # User interface classes
-from Radiopulse import *
-from ExciterObj import SignalCl
-from math import pi
+MAX_PIXEL_SIZE = 16777215
 
-app = QApplication(sys.argv)
-ui = UI()
+#Класс главного окна
+class DemoWindow(QMainWindow):
+    def __init__(self):
+        QMainWindow.__init__(self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle("Демонстрационная программа")
+        self.timer = QTimer()
+        self.create_ui()
 
-def close(): #Закрыть
+    def create_ui(self):
+        #Create and configure central widget
+        self.create_main_widget()
 
-    sys.exit()
+        #Create and configure packer
+        self.main_grid = QGridLayout(self.main_widget)
 
+        self.choose_panel = ChoosePanel(self.main_widget)
+        self.main_grid.addWidget(self.choose_panel, 0, 0)
 
-def plotb(): #Построить
+        self.setup_panel = SetupPanel(self.main_widget)
+        self.main_grid.addWidget(self.setup_panel, 1, 0, -1, 1)
 
-    if ui.choose_panel.radio_radiobutton.isChecked():
-        ui.plot_panel.draw_plot(radio.xpoints, radio.Ipoints, radio.Qpoints, radio.Zpoints)
-    elif (ui.choose_panel.nlchm_radiobutton.isChecked() or ui.choose_panel.lchm_radiobutton.isChecked()):
-        ui.plot_panel.draw_plot(radio_mod.Time, radio_mod.I, radio_mod.Q, radio_mod.Signal)
-        ui.plot_panel.draw_addPlot(radio_mod.Time, radio_mod.Wt)
+        self.plot_panel = PlotPanel(self.main_widget)
+        self.main_grid.addWidget(self.plot_panel, 0, 1, 2, -1)
 
+        self.graph_panel = GraphPanel(self.main_widget)
+        self.main_grid.addWidget(self.graph_panel, 2, 1, 1, -1)
 
-def radio_push():
-    if ui.choose_panel.radio_radiobutton.isChecked():
-        ui.plot_panel.add_plot.setVisible(0)
+        self.time_panel = TimePanel(self.main_widget)
+        self.main_grid.addWidget(self.time_panel, 3, 1)
 
-        ui.time_panel.time_stop_spinbox.setValue(20)
-        ui.time_panel.time_stop_spinbox.setEnabled(1)
-        ui.time_panel.time_start_spinbox.setValue(0)
-        ui.time_panel.time_start_spinbox.setEnabled(1)
-        ui.time_panel.auto_button.setEnabled(1)
-        ui.time_panel.auto_spinbox.setEnabled(1)
+        self.button_panel = ButtonPanel(self.main_widget)
+        self.main_grid.addWidget(self.button_panel, 3, 2)
 
-        ui.setup_panel.time_spinbox.setVisible(1)
-        ui.setup_panel.time_label.setVisible(1)
-        ui.setup_panel.number_spinbox.setVisible(1)
-        ui.setup_panel.number_label.setVisible(1)
-        ui.setup_panel.phase_spinbox.setVisible(1)
-        ui.setup_panel.phase_label.setVisible(1)
-
-        ui.setup_panel.f_spinbox.setRange(0.1, 10)
-        ui.setup_panel.f_spinbox.setDecimals(1)
-        ui.setup_panel.f_spinbox.setValue(2)
-        ui.setup_panel.f_spinbox.setSingleStep(0.1)
-
-        ui.setup_panel.period_spinbox.setRange(0.1, 200)
-        ui.setup_panel.period_spinbox.setValue(4)
-        ui.setup_panel.period_spinbox.setSingleStep(0.1)
-
-        ui.setup_panel.pulse_spinbox.setRange(0.01, 200)
-        ui.setup_panel.pulse_spinbox.setValue(2)
-        ui.setup_panel.pulse_spinbox.setSingleStep(0.1)
-
-        ui.setup_panel.ku_i_label.setVisible(0)
-        ui.setup_panel.ku_i_spinbox.setVisible(0)
-
-        plotb()
+        self.main_widget.setLayout(self.main_grid)
 
 
-def N_LNF(): #Н_ЛЧМ
-    if ui.choose_panel.nlchm_radiobutton.isChecked():
-        radio_mod.type_of_signal = "NLNF"
-        ui.plot_panel.add_plot.show()
-    elif ui.choose_panel.lchm_radiobutton.isChecked():
-        radio_mod.type_of_signal = "LNF"
-        ui.plot_panel.add_plot.show()
-
-    ui.setup_panel.phase_spinbox.setVisible(0)
-    ui.setup_panel.phase_label.setVisible(0)
-    ui.setup_panel.ku_i_label.setVisible(0)
-    ui.setup_panel.ku_i_spinbox.setVisible(0)
-
-    ui.setup_panel.time_spinbox.setVisible(0)
-    ui.setup_panel.time_label.setVisible(0)
-    ui.setup_panel.number_spinbox.setVisible(0)
-    ui.setup_panel.number_label.setVisible(0)
-
-    ui.time_panel.time_stop_spinbox.setEnabled(1)
-    ui.time_panel.time_stop_spinbox.setValue(100)
-    ui.time_panel.time_start_spinbox.setEnabled(1)
-    ui.time_panel.time_start_spinbox.setValue(0)
-    ui.time_panel.auto_button.setEnabled(1)
-    ui.time_panel.auto_spinbox.setEnabled(1)
+    def create_main_widget(self):
+        self.main_widget = QWidget()
+        self.main_widget.setMinimumSize(800, 640)
+        self.main_widget.setGeometry(0, 0, 800, 640)
+        self.setCentralWidget(self.main_widget)
 
 
-    ui.setup_panel.f_spinbox.setRange(0.0001,1)
-    ui.setup_panel.f_spinbox.setDecimals(4)
-    ui.setup_panel.f_spinbox.setValue(0.1)
-    ui.setup_panel.f_spinbox.setSingleStep(0.0001)
+    def about(self):
+        QMessageBox.about(self, "About",
+                                    """embedding_in_qt5.py demonstartion
+Copyright 2020 Ivan Fomin, 2020 Grigory Galchenkov
 
-    ui.setup_panel.pulse_spinbox.setRange(0.01,200)
-    ui.setup_panel.pulse_spinbox.setValue(100)
+This program is a demonstration of excite signal in receiver.
 
-    ui.setup_panel.period_spinbox.setRange(0.01,2000)
-    ui.setup_panel.period_spinbox.setSingleStep(0.01)
-    ui.setup_panel.period_spinbox.setValue(1000)
+It may be used and modified with no restriction; raw copies as well as
+modified versions may be distributed without limitation."""
+                                )
 
-    radio_mod.Configure_values(F = ui.setup_panel.f_spinbox.value())
-    redraw_plot_time()
-    
-    
+class ChoosePanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        QWidget.setFixedSize(self, 300, 150)
+        QWidget.setSizePolicy(self, QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-def redraw_plot_time():
-    ui.time_panel.time_start_spinbox.setMaximum(ui.time_panel.time_stop_spinbox.value() - 0.1)
-    ui.time_panel.time_stop_spinbox.setMinimum(ui.time_panel.time_start_spinbox.value() + 0.1)
-    if (ui.time_panel.auto_button.isChecked() == 0):
-        start = ui.time_panel.time_start_spinbox.value()
-        stop = ui.time_panel.time_stop_spinbox.value()
-        if (stop > start):
-            if ui.choose_panel.radio_radiobutton.isChecked():
-                radio.time_configure(start_time = start, end_time = stop)
-            else:
-                radio_mod.Configure_time(Start = start, Stop = stop)
-            plotb()
+        #Create main widget and layout
+        vertical_layout = QVBoxLayout()
 
-def redraw_plot():
-    if (ui.choose_panel.radio_radiobutton.isChecked()):
-        ui.setup_panel.pulse_spinbox.setMaximum(ui.setup_panel.period_spinbox.value())
-        ui.setup_panel.period_spinbox.setMinimum(ui.setup_panel.pulse_spinbox.value())
-        ui.setup_panel.period_spinbox.setMaximum(ui.setup_panel.time_spinbox.value() / 
-                                                 ui.setup_panel.number_spinbox.value())
-        ui.setup_panel.time_spinbox.setMinimum(ui.setup_panel.period_spinbox.value() * 
-                                               ui.setup_panel.number_spinbox.value())
-        ui.setup_panel.number_spinbox.setMaximum(round(ui.setup_panel.time_spinbox.value() / 
-                                                 ui.setup_panel.period_spinbox.value()))
-        radio.configure(frequency = ui.setup_panel.f_spinbox.value(), 
-                        amplify_i = ui.setup_panel.ku_i_spinbox.value(),
-                        amplify_q = ui.setup_panel.ku_i_spinbox.value(),
-                        length = ui.setup_panel.pulse_spinbox.value(),
-                        period_pulse = ui.setup_panel.period_spinbox.value(),
-                        number = ui.setup_panel.number_spinbox.value(),
-                        period_packet = ui.setup_panel.time_spinbox.value(),
-                        phase = ui.setup_panel.phase_spinbox.value())
-        if (ui.time_panel.auto_button.isChecked()):
-            ui.time_panel.time_stop_spinbox.setValue(radio.xpoints[-1])
-            ui.time_panel.time_start_spinbox.setValue(radio.xpoints[0])
-            radio.auto(50, ui.time_panel.auto_spinbox.value())
-        else:
-            radio.time_configure()
-        plotb()
+        #Create groupboxes
+        exciter_box = QGroupBox(self)
+        exciter_box.setTitle("Возбудитель")
 
-    if (ui.choose_panel.nlchm_radiobutton.isChecked() or ui.choose_panel.lchm_radiobutton.isChecked()):
-        radio_mod.Configure_values(Amplify_I = ui.setup_panel.ku_i_spinbox.value(),
-                                   Amplify_Q = ui.setup_panel.ku_i_spinbox.value(),
-                                   F = ui.setup_panel.f_spinbox.value(),
-                                   Imp = ui.setup_panel.pulse_spinbox.value(),
-                                   T = ui.setup_panel.period_spinbox.value())
-        if (ui.time_panel.auto_button.isChecked()):
-            ui.time_panel.time_stop_spinbox.setValue(radio_mod.Time[-1])
-            ui.time_panel.time_start_spinbox.setValue(radio_mod.Time[0])
-            radio_mod.AutoGen(50, ui.time_panel.auto_spinbox.value())
-            plotb()
-        else:
-            redraw_plot_time()
+        #Make main layout packer
+        inner_grid_layout = QGridLayout(exciter_box)
         
+        #Create radiobuttons
+        self.lchm_radiobutton = QRadioButton("ЛЧМ", exciter_box)
+        self.nlchm_radiobutton = QRadioButton("НЛЧМ", exciter_box)
+        self.radio_radiobutton = QRadioButton("Пачка РИ", exciter_box)
 
-def auto_but():
-    if (ui.time_panel.auto_button.isChecked()):
-        ui.time_panel.time_stop_spinbox.setEnabled(0)
-        ui.time_panel.time_start_spinbox.setEnabled(0)
-        ui.timer.start(20)
-        ui.time_panel.auto_button.setText("Стоп")
-    else:
-        ui.timer.stop()
-        ui.time_panel.time_stop_spinbox.setEnabled(1)
-        ui.time_panel.time_start_spinbox.setEnabled(1)
-        ui.time_panel.auto_button.setText("Запуск")
+        #Pack radiobuttons
+        inner_grid_layout.addWidget(self.lchm_radiobutton, 0, 0)
+        inner_grid_layout.addWidget(self.nlchm_radiobutton, 1, 0)
+        inner_grid_layout.addWidget(self.radio_radiobutton, 2, 0)
 
-def visible_i():
-    if ui.graph_panel.I_box.isChecked():
-        ui.plot_panel.i_flag = 1
-        plotb()
-    else:
-        ui.plot_panel.i_flag = 0
-        plotb()
+        #Ending packers
+        exciter_box.setLayout(inner_grid_layout)
+        vertical_layout.addWidget(exciter_box)
+        self.setLayout(vertical_layout)
 
-def visible_q():
-    if ui.graph_panel.Q_box.isChecked():
-        ui.plot_panel.q_flag = 1
-        plotb()
-    else:
-        ui.plot_panel.q_flag = 0
-        plotb()
 
-def visible_z():
-    if ui.graph_panel.Z_box.isChecked():
-        ui.plot_panel.z_flag = 1
-        plotb()
-    else:
-        ui.plot_panel.z_flag = 0
-        plotb()
+class SetupPanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
 
-#Привязка кнопок
-ui.choose_panel.radio_radiobutton.toggled.connect(radio_push)
-ui.choose_panel.lchm_radiobutton.toggled.connect(N_LNF)
-ui.choose_panel.nlchm_radiobutton.toggled.connect(N_LNF)
-ui.button_panel.exit_button.clicked.connect(close)
-ui.time_panel.auto_button.toggled.connect(auto_but)
-ui.graph_panel.I_box.toggled.connect(visible_i)
-ui.graph_panel.Q_box.toggled.connect(visible_q)
-ui.graph_panel.Z_box.toggled.connect(visible_z)
+        #Create main widget and layout
+        vertical_layout = QVBoxLayout()
 
-#Привязка изменения значения в спинбоксах
-ui.setup_panel.phase_spinbox.valueChanged.connect(redraw_plot)
-ui.setup_panel.ku_i_spinbox.valueChanged.connect(redraw_plot)
-ui.setup_panel.f_spinbox.valueChanged.connect(redraw_plot)
-ui.setup_panel.time_spinbox.valueChanged.connect(redraw_plot)
-ui.setup_panel.pulse_spinbox.valueChanged.connect(redraw_plot)
-ui.setup_panel.period_spinbox.valueChanged.connect(redraw_plot)
-ui.setup_panel.number_spinbox.valueChanged.connect(redraw_plot)
-ui.time_panel.time_stop_spinbox.valueChanged.connect(redraw_plot_time)
-ui.time_panel.time_start_spinbox.valueChanged.connect(redraw_plot_time)
+        #Create groupboxes
+        setup_box = QGroupBox(self)
+        setup_box.setMaximumSize(300, MAX_PIXEL_SIZE)
+        setup_box.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        setup_box.setTitle("Параметры сигнала")
 
-# Привязка таймера
-ui.timer.timeout.connect(redraw_plot)
+        #Make main layout packer
+        inner_grid_layout = QGridLayout(setup_box)
+        
+        # Create elements
 
-radio = Radiopulse()
-radio_mod = SignalCl() 
-""" Конец реализации конструктора """
+        self.phase_label = QLabel("Начальная фаза: ", setup_box)
+        self.phase_spinbox = QSpinBox(setup_box)
 
-ui.show()
-sys.exit(app.exec_())
+        self.ku_i_label = QLabel("Коэф. усиления:", setup_box)
+        self.ku_i_spinbox = QDoubleSpinBox(setup_box)
+        f_label = QLabel("Частота:", setup_box)
+        self.f_spinbox = QDoubleSpinBox(setup_box)
+        self.time_label = QLabel("Период пачки:", setup_box)
+        self.time_spinbox = QDoubleSpinBox(setup_box)
+        self.period_label = QLabel("Период импульсов:", setup_box)
+        self.period_spinbox = QDoubleSpinBox(setup_box)
+        self.number_label = QLabel("Число импульсов:", setup_box)
+        self.number_spinbox = QSpinBox(setup_box)
+        self.pulse_label = QLabel("Длительность импульса:", setup_box)
+        self.pulse_spinbox = QDoubleSpinBox(setup_box)
+
+        # Configure spinboxes
+        self.phase_spinbox.setValue(0)
+        self.phase_spinbox.setRange(-180, 180)
+        self.phase_spinbox.setSuffix(" град")
+        self.phase_spinbox.setVisible(0)
+        self.phase_label.setVisible(0)
+
+        self.ku_i_spinbox.setValue(1)
+        self.ku_i_spinbox.setRange(0, 100)
+        self.ku_i_spinbox.setSingleStep(0.1)
+        self.ku_i_spinbox.setVisible(0)
+        self.ku_i_label.setVisible(0)
+
+        self.f_spinbox.setSuffix(" МГц")
+        self.f_spinbox.setValue(2)
+        self.f_spinbox.setRange(0.1, 10)
+        self.f_spinbox.setSingleStep(0.1)
+
+        self.time_spinbox.setValue(100)
+        self.time_spinbox.setSuffix(" мкс")
+        self.time_spinbox.setSingleStep(1)
+        self.time_spinbox.setRange(1, 1000)
+
+        self.number_spinbox.setValue(10)
+        self.number_spinbox.setRange(1, 100)
+
+        self.period_spinbox.setValue(10)
+        self.period_spinbox.setRange(0.01, 200)
+        self.period_spinbox.setSuffix(" мкс")
+        self.period_spinbox.setSingleStep(0.1)
+
+        self.pulse_spinbox.setValue(2)
+        self.pulse_spinbox.setRange(0.01, 200)
+        self.pulse_spinbox.setSuffix(" мкс")
+        self.pulse_spinbox.setSingleStep(0.1)
+
+        self.time_spinbox.setVisible(0)
+        self.time_label.setVisible(0)
+        self.number_spinbox.setVisible(0)
+        self.number_label.setVisible(0)
+
+        # Pack elements
+        inner_grid_layout.addWidget(self.phase_label, 0, 0)
+        inner_grid_layout.addWidget(self.phase_spinbox, 0, 1)
+        inner_grid_layout.addWidget(self.ku_i_label, 1, 0)
+        inner_grid_layout.addWidget(self.ku_i_spinbox, 1, 1)
+        inner_grid_layout.addWidget(f_label, 2, 0)
+        inner_grid_layout.addWidget(self.f_spinbox, 2, 1)
+        inner_grid_layout.addWidget(self.time_label, 3, 0)
+        inner_grid_layout.addWidget(self.time_spinbox, 3, 1)
+        inner_grid_layout.addWidget(self.period_label, 4, 0)
+        inner_grid_layout.addWidget(self.period_spinbox, 4, 1)
+        inner_grid_layout.addWidget(self.number_label, 5, 0)
+        inner_grid_layout.addWidget(self.number_spinbox, 5, 1)
+        inner_grid_layout.addWidget(self.pulse_label, 6, 0)
+        inner_grid_layout.addWidget(self.pulse_spinbox, 6, 1)
+
+        #Ending packers
+        setup_box.setLayout(inner_grid_layout)
+
+        vertical_layout.addWidget(setup_box)
+        self.setLayout(vertical_layout)
+
+
+class GraphPanel(QWidget):
+    def __init__(self, parent = None):
+        self.parent = parent
+        QWidget.__init__(self, self.parent)
+        QWidget.setMaximumHeight(self, 40)
+        simple_layout = QHBoxLayout()
+
+        self.I_box = QCheckBox("I составляющая", self)
+        self.Q_box = QCheckBox("Q составляющая", self)
+        self.Z_box = QCheckBox("Выходной сигнал", self)
+
+        self.I_box.setChecked(1)
+        self.Q_box.setChecked(1)
+        self.Z_box.setChecked(1)
+
+        simple_layout.addStretch(1)
+        simple_layout.addWidget(self.I_box)
+        simple_layout.addStretch(1)
+        simple_layout.addWidget(self.Q_box)
+        simple_layout.addStretch(1)
+        simple_layout.addWidget(self.Z_box)
+        simple_layout.addStretch(1)
+        simple_layout.setAlignment(Qt.AlignHCenter)
+
+        self.setLayout(simple_layout)
+
+class TimePanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        simple_layout = QHBoxLayout()
+
+        time_box = QGroupBox(self)
+        time_box.setMaximumSize(MAX_PIXEL_SIZE, 120)
+        time_box.setSizePolicy(QSizePolicy.Expanding,
+                               QSizePolicy.Fixed)
+        time_box.setTitle("Время")
+
+        grid_manage = QGridLayout(time_box)
+
+       #Create box elements
+        time_start_label = QLabel("Начальная точка", time_box)
+        time_stop_label = QLabel("Конечная точка", time_box)
+        self.time_start_spinbox = QDoubleSpinBox(time_box)
+        self.time_stop_spinbox = QDoubleSpinBox(time_box)
+        self.auto_button = QPushButton("Запуск", time_box)
+        self.auto_spinbox = QDoubleSpinBox(time_box)
+
+        #Configure elements
+        self.time_start_spinbox.setRange(0.0, 1000000)
+        self.time_start_spinbox.setSingleStep(0.1)
+        self.time_start_spinbox.setSuffix(" мкс")
+        self.time_start_spinbox.setEnabled(0)
+        self.time_stop_spinbox.setRange(0.1, 1000000.1)
+        self.time_stop_spinbox.setSingleStep(0.1)
+        self.time_stop_spinbox.setSuffix(" мкс")
+        self.time_stop_spinbox.setValue(100.0)
+        self.time_stop_spinbox.setEnabled(0)
+        self.auto_button.setCheckable(1)
+        self.auto_button.setEnabled(0)
+        self.auto_spinbox.setRange(0.0, 1000)
+        self.auto_spinbox.setValue(10.0)
+        self.auto_spinbox.setSingleStep(1)
+        self.auto_spinbox.setEnabled(0)
+        self.auto_spinbox.setSuffix(" мкс/c")
+
+        #Add elememts to grid packer
+        grid_manage.addWidget(time_start_label, 0, 0)
+        grid_manage.addWidget(time_stop_label, 0, 1)
+        grid_manage.addWidget(self.time_start_spinbox, 1, 0)
+        grid_manage.addWidget(self.time_stop_spinbox, 1, 1)
+        grid_manage.addWidget(self.auto_button, 2, 0)
+        grid_manage.addWidget(self.auto_spinbox, 2, 1)
+
+        time_box.setLayout(grid_manage)
+        simple_layout.addWidget(time_box)
+        self.setLayout(simple_layout)
+
+class ButtonPanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        self.setFixedSize(120, 120)
+        self.setSizePolicy(QSizePolicy.Fixed,
+                           QSizePolicy.Fixed)
+
+        simple_layout = QHBoxLayout()
+        button_box = QGroupBox(self)
+        button_box.setTitle("Управление")
+        box_layout = QVBoxLayout(button_box)
+
+        # Create buttons
+        self.exit_button = QPushButton("Выход", button_box)
+
+        # Add to layout
+        box_layout.addWidget(self.exit_button)
+        button_box.setLayout(box_layout)
+
+        # Place main layout
+        simple_layout.addWidget(button_box)
+        self.setLayout(simple_layout)
