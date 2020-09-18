@@ -8,9 +8,10 @@ Created on Fri Sep 18 16:27:40 2020
 from Model import Model
 from Signal import Signal
 
-Model.signal.Time = 10
+Model.signal.time = 10
 Model.signal.amplitude = 1
-Model.signal.frequency = 10
+Model.signal.dots_per_osc = 50
+Model.signal.frequency = 0.5
 Model.signal.phase = 0
 
 Model.signal.Create()
