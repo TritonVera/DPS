@@ -7,6 +7,9 @@ Created on Fri Sep 18 16:27:40 2020
 
 from Model import Model
 from Signal import Signal
+from Modem import Modem
+
+Modem = Modem()
 
 Model.signal.time = 10
 Model.signal.amplitude = 1
@@ -14,5 +17,8 @@ Model.signal.dots_per_osc = 50
 Model.signal.frequency = 0.5
 Model.signal.phase = 0
 
-Model.signal.Create()
+Modem.unit_time = 1
+
+#Model.signal.Simple()
+Modem.FM_2()
 Model.signal.Plot()

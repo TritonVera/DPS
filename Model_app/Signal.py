@@ -12,29 +12,42 @@ class Signal():
   
   def __init__(self):
       
-      self.time = 0
-      self.dots_per_osc = 0
+      self.time = 0                              #Длительность сигнала
+      self.dots = 0                              #Количество дискретных точек
+      self.dots_per_osc = 0                      #Количество точек на колебание
       
-      self.phase = 0
-      self.frequency = 0
-      self.amplitude = 0
+      self.phase = 0                             #Начальная фаза
+      self.frequency = 0                         #Частота
+      self.amplitude = 0                         #Амплитуда
 
       self.value = []
       self.argument = []
       
-  def Create(self):
+  def Dots(self):                                #Расчет dots
     
-    dots = int(self.dots_per_osc * self.time * self.frequency)
-    for i in range(0, dots):
+    self.dots = int(self.dots_per_osc * self.time * self.frequency)
       
-      now = i*self.time/dots
+  def Simple(self):                              #Формирование сигнала
+                                                 #без модуляции
+    self.Dots()
+    for i in range(0, self.dots):
+      
+      now = i*self.time/self.dots
       w = 2*pi*self.frequency
-      temp_value = self.amplitude*sin(w*now)
+      temp_value = self.amplitude*sin(w*now + self.phase)
       
       self.value.append(temp_value)
       self.argument.append(now)
       
-  def Plot(self):
+  def PS_Value(self, phase_shift, now):          #Запись единичного значения
+                                                 #сигнала с фазовым сдвигом
+      w = 2*pi*self.frequency
+      temp_value = self.amplitude*sin(w*now + self.phase + phase_shift)
+      
+      self.value.append(temp_value)
+      self.argument.append(now)    
+      
+  def Plot(self):                                #Отладочная отрисовка
     
-    fig,(ax1) = pyplot.subplots(1,1, figsize = (5,5))
+    fig,(ax1) = pyplot.subplots(1,1, figsize = (10,5))
     ax1.plot(self.argument, self.value)
