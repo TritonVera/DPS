@@ -13,7 +13,7 @@ class Signal():
   def __init__(self):
       
       self.time = 0                              #Длительность сигнала
-      self.dots = 0                              #Количество дискретных точек
+      self.dots = 0                              #Количество точек сигнала
       self.dots_per_osc = 0                      #Количество точек на колебание
       
       self.phase = 0                             #Начальная фаза

@@ -17,8 +17,8 @@ Model.signal.dots_per_osc = 50
 Model.signal.frequency = 0.5
 Model.signal.phase = 0
 
-Modem.unit_time = 1
+Modem.unit_time = 1/Model.signal.frequency
 
 #Model.signal.Simple()
-Modem.FM_2()
+Modem.FM(2)
 Model.signal.Plot()
