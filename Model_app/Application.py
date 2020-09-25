@@ -6,8 +6,8 @@ Created on Fri Sep 18 16:27:40 2020
 """
 
 from Model import Model
-from Signal import Signal
 from Modem import Modem
+from math import pi
 
 Modem = Modem()
 
@@ -17,8 +17,10 @@ Model.signal.dots_per_osc = 50
 Model.signal.frequency = 0.5
 Model.signal.phase = 0
 
+Modem.number = 2
 Modem.unit_time = 1/Model.signal.frequency
 
-#Model.signal.Simple()
-Modem.FM(2)
+#Modem.PM()
+#Modem.APM()
+Modem.FM()
 Model.signal.Plot()
