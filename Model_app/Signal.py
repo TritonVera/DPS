@@ -5,7 +5,7 @@ Created on Fri Sep 18 16:08:55 2020
 @author: Григорий
 """
 
-from math import pi, sin
+from math import pi, sin, cos
 from matplotlib import pyplot
 
 class Signal():
@@ -13,7 +13,7 @@ class Signal():
   def __init__(self):
       
       self.time = 0                              #Длительность сигнала
-      self.dots = 0                              #Количество дискретных точек
+      self.dots = 0                              #Количество точек сигнала
       self.dots_per_osc = 0                      #Количество точек на колебание
       
       self.phase = 0                             #Начальная фаза
@@ -27,25 +27,19 @@ class Signal():
     
     self.dots = int(self.dots_per_osc * self.time * self.frequency)
       
-  def Simple(self):                              #Формирование сигнала
-                                                 #без модуляции
-    self.Dots()
-    for i in range(0, self.dots):
+  def Point(self, t, phase_shift = 0, amplitude_inc = 1, frequency_deviation = 0):    
+                                                 
+      w0 = 2*pi*self.frequency
+      w = 2*pi*frequency_deviation
+      i_amp = self.amplitude * amplitude_inc
+      q_amp = self.amplitude * amplitude_inc
       
-      now = i*self.time/self.dots
-      w = 2*pi*self.frequency
-      temp_value = self.amplitude*sin(w*now + self.phase)
+      I = i_amp*cos(w * t + self.phase + phase_shift)
+      Q = q_amp*sin(w * t + self.phase + phase_shift)
+      S = I*sin(w0 * t) - Q*cos(w0 * t)
       
-      self.value.append(temp_value)
-      self.argument.append(now)
-      
-  def PS_Value(self, phase_shift, now):          #Запись единичного значения
-                                                 #сигнала с фазовым сдвигом
-      w = 2*pi*self.frequency
-      temp_value = self.amplitude*sin(w*now + self.phase + phase_shift)
-      
-      self.value.append(temp_value)
-      self.argument.append(now)    
+      self.value.append(S)
+      self.argument.append(t)
       
   def Plot(self):                                #Отладочная отрисовка
     
