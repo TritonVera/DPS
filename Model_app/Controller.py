@@ -51,7 +51,7 @@ def no_line():
 def gauss_line():
 
 	ui.line_panel.noise_label.setVisible(1)
-	NKP.change_parameters(type_of_line = 'gauss', dispersion = sqrt(1.0/ui.line_panel.noise_factor_spinbox.value()), mu = 0)
+	NKP.change_parameters(type_of_line = 'gauss', dispersion = sqrt(0.707/ui.line_panel.noise_factor_spinbox.value()), mu = 0)
 
 
 #Привязка кнопок
