@@ -81,6 +81,7 @@ class ModulPanel(QWidget):
         
         #Create radiobuttons
         self.bpsk_radiobutton = QRadioButton("BPSK", exciter_box)
+        self.bpsk_radiobutton.setChecked(1)
         self.qpsk_radiobutton = QRadioButton("QPSK", exciter_box)
 
         #Pack radiobuttons
@@ -111,6 +112,7 @@ class LinePanel(QWidget):
         
         # Create elements
         self.no_noise_radiobutton = QRadioButton("Канал без искажений", setup_box)
+        self.no_noise_radiobutton.setChecked(1)
         self.gauss_radiobutton = QRadioButton("Гауссовская помеха", setup_box)
 
         # Pack elememnts

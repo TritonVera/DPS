@@ -26,8 +26,7 @@ def close(): #Закрыть
 
 def plot_view(): #Построить
 
-    pass
-
+    ui.plot_panel.draw_plot(NKP.output)
 
 def bpsk():
     
@@ -66,10 +65,10 @@ Model.signal.phase = 0
 
 Modem.number = 2
 Modem.unit_time = 1/Model.signal.frequency
+Modem.FM()
 
 # Конфигурирование канала связи
 NKP = CommLine(input_signal = Model.signal.value)
-Model.signal.value = NKP.output
 """ Конец реализации конструктора """
 
 ui.show()
