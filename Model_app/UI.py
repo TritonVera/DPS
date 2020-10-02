@@ -66,7 +66,7 @@ modified versions may be distributed without limitation."""
 class ModulPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedSize(self, 300, 300)
+        QWidget.setFixedSize(self, 300, 300)    
         QWidget.setSizePolicy(self, QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         #Create main widget and layout
@@ -83,10 +83,14 @@ class ModulPanel(QWidget):
         self.bpsk_radiobutton = QRadioButton("BPSK", exciter_box)
         self.bpsk_radiobutton.setChecked(1)
         self.qpsk_radiobutton = QRadioButton("QPSK", exciter_box)
+        self.qpsk_shift = QRadioButton("QPSK со сдвигом", exciter_box)
+        self.opsk_radiobutton = QRadioButton("8-PSK", exciter_box)
 
         #Pack radiobuttons
         inner_grid_layout.addWidget(self.bpsk_radiobutton, 0, 0)
         inner_grid_layout.addWidget(self.qpsk_radiobutton, 1, 0)
+        inner_grid_layout.addWidget(self.qpsk_shift, 2, 0)
+        inner_grid_layout.addWidget(self.opsk_radiobutton, 3, 0)
 
         #Ending packers
         exciter_box.setLayout(inner_grid_layout)
@@ -111,13 +115,22 @@ class LinePanel(QWidget):
         inner_grid_layout = QGridLayout(setup_box)
         
         # Create elements
+        self.noise_label = QLabel("Сигнал/шум", setup_box)
+        self.noise_label.setVisible(0)
+        self.noise_label.setFixedSize(90, 20)
+
         self.no_noise_radiobutton = QRadioButton("Канал без искажений", setup_box)
         self.no_noise_radiobutton.setChecked(1)
         self.gauss_radiobutton = QRadioButton("Гауссовская помеха", setup_box)
+        self.noise_factor_spinbox = QDoubleSpinBox(setup_box)
+        self.noise_factor_spinbox.setValue(10.0)
+        self.noise_factor_spinbox.setRange(0, 100)
 
         # Pack elememnts
-        inner_grid_layout.addWidget(self.no_noise_radiobutton, 0, 0)
-        inner_grid_layout.addWidget(self.gauss_radiobutton, 1, 0)
+        inner_grid_layout.addWidget(self.noise_label, 0, 1, 1, 1)
+        inner_grid_layout.addWidget(self.no_noise_radiobutton, 1, 0, 1, -1)
+        inner_grid_layout.addWidget(self.gauss_radiobutton, 2, 0, 1, 1)
+        inner_grid_layout.addWidget(self.noise_factor_spinbox, 2, 1, 1, 1)
 
         #Ending packers
         setup_box.setLayout(inner_grid_layout)
