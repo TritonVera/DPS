@@ -44,6 +44,8 @@ class CommLine():
 					self.__type_of_line = 3
 				elif kwargs[key] == 'relei':
 					self.__type_of_line = 4
+				else:
+					self.__type_of_line = 0
 
 			# Change init parameters of noise
 			elif key == 'dispersion':
@@ -57,8 +59,10 @@ class CommLine():
 	# Switch to choose work method
 	def __choose_mode(self):
 		if self.__type_of_line == 0:
+			print("Simple")
 			self.output = self.__input.copy()
 		elif self.__type_of_line == 1:
+			print("Gauss")
 			self.__gauss()
 		elif self.__type_of_line == 2:
 			self.__line_distor()
