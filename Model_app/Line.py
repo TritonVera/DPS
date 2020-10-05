@@ -8,6 +8,7 @@
 """
 
 import random
+from math import sqrt
 
 class CommLine():
 
@@ -69,6 +70,7 @@ class CommLine():
 		elif self.__type_of_line == 3:
 			self.__garmonic()
 		elif self.__type_of_line == 4:
+			print("Relei")
 			self.__relei()
 
 	# Work methods
@@ -84,7 +86,12 @@ class CommLine():
 		pass
 
 	def __relei(self):
-		pass
+				
+		for i in range(len(self.__input)):
+			self.output.append(self.__input[i] + \
+			sqrt(random.gauss(self.__mu, self.__dispersion)**2 + \
+			random.gauss(self.__mu, self.__dispersion)**2)
+			)
 
 	# Debug methods
 	def print_input(self):

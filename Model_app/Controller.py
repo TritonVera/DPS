@@ -26,13 +26,18 @@ def close(): #Закрыть
 
 def plot_view(): #Построить
 
-    Modem.PM()
+    if ui.modul_panel.apm_radiobutton.isChecked():
+    	Modem.APM()
+    elif ui.modul_panel.fm_radiobutton.isChecked():
+    	Modem.FM()
+    else:
+    	Modem.PM()
     NKP.change_parameters(input_signal = Model.signal.value)
     ui.plot_panel.draw_plot(NKP.output)
 
 def psk():
 
-    Model.signal.phase = pi
+    Model.signal.phase = 0
     if ui.modul_panel.bpsk_radiobutton.isChecked():
     	Modem.number = 2
     elif ui.modul_panel.qpsk_radiobutton.isChecked():
@@ -53,15 +58,27 @@ def gauss_line():
 	ui.line_panel.noise_label.setVisible(1)
 	NKP.change_parameters(type_of_line = 'gauss', dispersion = sqrt(0.707/ui.line_panel.noise_factor_spinbox.value()), mu = 0)
 
+def relei_line():
+
+	ui.line_panel.noise_label.setVisible(1)
+	NKP.change_parameters(type_of_line = 'relei', dispersion = sqrt(0.707/ui.line_panel.noise_factor_spinbox.value()), mu = 0)
+
+def change_line():
+
+	NKP.change_parameters(dispersion = sqrt(0.707/ui.line_panel.noise_factor_spinbox.value()), mu = 0)
 
 #Привязка кнопок
 ui.modul_panel.bpsk_radiobutton.clicked.connect(psk)
 ui.modul_panel.qpsk_radiobutton.clicked.connect(psk)
 ui.modul_panel.qpsk_shift.clicked.connect(psk)
 ui.modul_panel.opsk_radiobutton.clicked.connect(psk)
+ui.modul_panel.apm_radiobutton.clicked.connect(psk)
+ui.modul_panel.fm_radiobutton.clicked.connect(psk)
+
 ui.line_panel.no_noise_radiobutton.clicked.connect(no_line)
 ui.line_panel.gauss_radiobutton.clicked.connect(gauss_line)
-ui.line_panel.noise_factor_spinbox.valueChanged.connect(gauss_line)
+ui.line_panel.noise_factor_spinbox.valueChanged.connect(change_line)
+ui.line_panel.relei_radiobutton.clicked.connect(relei_line)
 ui.button_panel.plot_button.clicked.connect(plot_view)
 ui.button_panel.exit_button.clicked.connect(close)
 

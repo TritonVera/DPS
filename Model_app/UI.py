@@ -85,12 +85,16 @@ class ModulPanel(QWidget):
         self.qpsk_radiobutton = QRadioButton("QPSK", exciter_box)
         self.qpsk_shift = QRadioButton("QPSK со сдвигом", exciter_box)
         self.opsk_radiobutton = QRadioButton("8-PSK", exciter_box)
+        self.apm_radiobutton = QRadioButton("APM", exciter_box)
+        self.fm_radiobutton = QRadioButton("FM", exciter_box)
 
         #Pack radiobuttons
         inner_grid_layout.addWidget(self.bpsk_radiobutton, 0, 0)
         inner_grid_layout.addWidget(self.qpsk_radiobutton, 1, 0)
         inner_grid_layout.addWidget(self.qpsk_shift, 2, 0)
         inner_grid_layout.addWidget(self.opsk_radiobutton, 3, 0)
+        inner_grid_layout.addWidget(self.apm_radiobutton, 4, 0)
+        inner_grid_layout.addWidget(self.fm_radiobutton, 5, 0)
 
         #Ending packers
         exciter_box.setLayout(inner_grid_layout)
@@ -121,16 +125,27 @@ class LinePanel(QWidget):
 
         self.no_noise_radiobutton = QRadioButton("Канал без искажений", setup_box)
         self.no_noise_radiobutton.setChecked(1)
+
         self.gauss_radiobutton = QRadioButton("Гауссовская помеха", setup_box)
         self.noise_factor_spinbox = QDoubleSpinBox(setup_box)
         self.noise_factor_spinbox.setValue(10.0)
-        self.noise_factor_spinbox.setRange(0, 100)
+        self.noise_factor_spinbox.setRange(0.1, 100)
+        self.noise_factor_spinbox.setSingleStep(0.1)
+
+        self.line_distor_radiobutton = QRadioButton("Линейные искажения", setup_box)
+        self.line_distor_radiobutton.setEnabled(0)
+        self.garmonic_radiobutton = QRadioButton("Гармоническая помеха", setup_box)
+        self.garmonic_radiobutton.setEnabled(0)
+        self.relei_radiobutton = QRadioButton("Релеевская помеха", setup_box)
 
         # Pack elememnts
         inner_grid_layout.addWidget(self.noise_label, 0, 1, 1, 1)
         inner_grid_layout.addWidget(self.no_noise_radiobutton, 1, 0, 1, -1)
         inner_grid_layout.addWidget(self.gauss_radiobutton, 2, 0, 1, 1)
         inner_grid_layout.addWidget(self.noise_factor_spinbox, 2, 1, 1, 1)
+        inner_grid_layout.addWidget(self.line_distor_radiobutton, 3, 0, 1, -1)
+        inner_grid_layout.addWidget(self.garmonic_radiobutton, 4, 0, 1, -1)
+        inner_grid_layout.addWidget(self.relei_radiobutton, 5, 0, 1, -1)
 
         #Ending packers
         setup_box.setLayout(inner_grid_layout)
