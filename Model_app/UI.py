@@ -8,7 +8,7 @@ Created on Sat Feb 29 15:10:12 2020
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QSizePolicy, \
                             QMessageBox, QWidget, QGroupBox, QRadioButton, \
                             QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
-                            QDoubleSpinBox, QCheckBox, QSpinBox
+                            QDoubleSpinBox, QCheckBox, QSpinBox, QComboBox
 from PyQt5.QtCore import Qt, QTimer
 from ExtUI import PlotPanel
 
@@ -34,13 +34,13 @@ class DemoWindow(QMainWindow):
         self.main_grid.addWidget(self.modul_panel, 0, 0)
 
         self.line_panel = LinePanel(self.main_widget)
-        self.main_grid.addWidget(self.line_panel, 1, 0, -1, 1)
+        self.main_grid.addWidget(self.line_panel, 0, 1)
 
         self.plot_panel = PlotPanel(self.main_widget)
-        self.main_grid.addWidget(self.plot_panel, 0, 1, 2, -1)
+        self.main_grid.addWidget(self.plot_panel, 1, 0, 1, -1)
 
         self.button_panel = ButtonPanel(self.main_widget)
-        self.main_grid.addWidget(self.button_panel, 2, 1, -1, 1)
+        self.main_grid.addWidget(self.button_panel, 2, 0, -1, -1)
 
         self.main_widget.setLayout(self.main_grid)
 
@@ -66,8 +66,8 @@ modified versions may be distributed without limitation."""
 class ModulPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedSize(self, 300, 300)    
-        QWidget.setSizePolicy(self, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        QWidget.setMinimumSize(self, 200, 300)    
+        QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Create main widget and layout
         vertical_layout = QVBoxLayout()
@@ -105,53 +105,62 @@ class ModulPanel(QWidget):
 class LinePanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setMaximumSize(self, 300, MAX_PIXEL_SIZE)
-        QWidget.setSizePolicy(self, QSizePolicy.Fixed, QSizePolicy.Expanding)
+        QWidget.setMinimumSize(self, 200, 100)
+        QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Create main widget and layout
-        vertical_layout = QVBoxLayout()
+        # vertical_layout = QVBoxLayout()
 
-        #Create groupboxes
-        setup_box = QGroupBox(self)
-        setup_box.setTitle("Канал связи")
+        # #Create groupboxes
+        # setup_box = QGroupBox(self)
+        # setup_box.setTitle("Канал связи")
 
         #Make main layout packer
-        inner_grid_layout = QGridLayout(setup_box)
+        inner_grid_layout = QGridLayout(self)
         
         # Create elements
-        self.noise_label = QLabel("Сигнал/шум", setup_box)
+        self.name_label = QLabel("Выбор канала связи", self)
+        self.name_label.setFixedSize(150, 15)
+
+        self.line_combobox = QComboBox(self)
+        self.line_combobox.addItems(["Канал без искажений", "Гауссовская помеха", "Линейные искажения", 
+            "Гармоническая помеха", "Релеевская помеха"])
+
+        self.noise_label = QLabel("Сигнал/шум", self)
         self.noise_label.setVisible(0)
         self.noise_label.setFixedSize(90, 20)
 
-        self.no_noise_radiobutton = QRadioButton("Канал без искажений", setup_box)
-        self.no_noise_radiobutton.setChecked(1)
+        # self.no_noise_radiobutton = QRadioButton("Канал без искажений", self)
+        # self.no_noise_radiobutton.setChecked(1)
 
-        self.gauss_radiobutton = QRadioButton("Гауссовская помеха", setup_box)
-        self.noise_factor_spinbox = QDoubleSpinBox(setup_box)
+        # self.gauss_radiobutton = QRadioButton("Гауссовская помеха", self)
+        self.noise_factor_spinbox = QDoubleSpinBox(self)
+        self.noise_factor_spinbox.setVisible(0)
         self.noise_factor_spinbox.setValue(10.0)
         self.noise_factor_spinbox.setRange(0.1, 100)
         self.noise_factor_spinbox.setSingleStep(0.1)
 
-        self.line_distor_radiobutton = QRadioButton("Линейные искажения", setup_box)
-        self.line_distor_radiobutton.setEnabled(0)
-        self.garmonic_radiobutton = QRadioButton("Гармоническая помеха", setup_box)
-        self.garmonic_radiobutton.setEnabled(0)
-        self.relei_radiobutton = QRadioButton("Релеевская помеха", setup_box)
+        # self.line_distor_radiobutton = QRadioButton("Линейные искажения", self)
+        # self.line_distor_radiobutton.setEnabled(0)
+        # self.garmonic_radiobutton = QRadioButton("Гармоническая помеха", self)
+        # self.relei_radiobutton = QRadioButton("Релеевская помеха", self)
 
         # Pack elememnts
-        inner_grid_layout.addWidget(self.noise_label, 0, 1, 1, 1)
-        inner_grid_layout.addWidget(self.no_noise_radiobutton, 1, 0, 1, -1)
-        inner_grid_layout.addWidget(self.gauss_radiobutton, 2, 0, 1, 1)
-        inner_grid_layout.addWidget(self.noise_factor_spinbox, 2, 1, 1, 1)
-        inner_grid_layout.addWidget(self.line_distor_radiobutton, 3, 0, 1, -1)
-        inner_grid_layout.addWidget(self.garmonic_radiobutton, 4, 0, 1, -1)
-        inner_grid_layout.addWidget(self.relei_radiobutton, 5, 0, 1, -1)
+        inner_grid_layout.addWidget(self.name_label, 0, 0)
+        inner_grid_layout.addWidget(self.line_combobox, 1, 0)
+        inner_grid_layout.addWidget(self.noise_label, 2, 0)
+        # inner_grid_layout.addWidget(self.no_noise_radiobutton, 3, 0, 1, -1)
+        # inner_grid_layout.addWidget(self.gauss_radiobutton, 4, 0, 1, 1)
+        inner_grid_layout.addWidget(self.noise_factor_spinbox, 2, 1)
+        # inner_grid_layout.addWidget(self.line_distor_radiobutton, 5, 0, 1, -1)
+        # inner_grid_layout.addWidget(self.garmonic_radiobutton, 6, 0, 1, -1)
+        # inner_grid_layout.addWidget(self.relei_radiobutton, 7, 0, 1, -1)
 
         #Ending packers
-        setup_box.setLayout(inner_grid_layout)
+        # setup_box.setLayout(inner_grid_layout)
 
-        vertical_layout.addWidget(setup_box)
-        self.setLayout(vertical_layout)
+        # vertical_layout.addWidget(setup_box)
+        self.setLayout(inner_grid_layout)
 
 
 class ButtonPanel(QWidget):

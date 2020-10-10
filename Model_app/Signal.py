@@ -7,6 +7,7 @@ Created on Fri Sep 18 16:08:55 2020
 
 from math import pi, sin, cos
 from matplotlib import pyplot
+import numpy as np
 
 class Signal():
   
@@ -45,3 +46,24 @@ class Signal():
     
     fig,(ax1) = pyplot.subplots(1,1, figsize = (10,5))
     ax1.plot(self.argument, self.value)
+
+
+class Garmonic():
+    def __init__(self, in_i = 1, in_q = 0, in_w0 = 0, in_phase = 0, in_time = 0, in_dev = 0):
+
+        self.I = in_i
+        self.Q = in_q
+        self.w0 = 2*pi*in_w0
+        self.phase = in_phase
+        self.time = np.array(in_time)
+        self.dev = 2*pi*in_dev
+        self.output = np.array(self.time)
+
+    def calc(self):
+        print(self.w0)
+        for t in range(self.time.size):
+            I = self.I*cos(self.dev * self.time[t] + self.phase)
+            Q = self.Q*sin(self.dev * self.time[t] + self.phase)
+            self.output.put(t, I*sin(self.w0 * self.time[t]) - Q*cos(self.w0 * self.time[t]))
+            print(self.w0 * self.time[t])
+        return self.output

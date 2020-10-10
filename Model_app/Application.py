@@ -29,7 +29,7 @@ Model.signal.Plot()
 #Model.signal.Simple()
 
 # Обертка канала связи
-NKP.change_parameters(input_signal = Model.signal.value, 
+NKP.change_parameters(input_signal = Model.signal, 
       				  type_of_line = 'gauss', dispersion = 1, mu = 0)
 Model.signal.value = NKP.output
 

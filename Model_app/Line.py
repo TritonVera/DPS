@@ -9,14 +9,17 @@
 
 import random
 from math import sqrt
+import numpy as np
+from Signal import Signal, Garmonic
 
 class CommLine():
 
 	def __init__(self, **kwargs):
 
 		# Init new input signal and output
-		self.__input = []
-		self.output = []
+		self.__signal = Signal()
+		self.input = np.array(0)
+		self.output = np.array(0)
 
 		# Communication line noise parameters
 		self.__type_of_line = 0
@@ -32,8 +35,8 @@ class CommLine():
 		for key in kwargs:
 			# Load new input signal
 			if key == 'input_signal':
-				self.__input = kwargs[key]
-				self.output = []
+				self.__signal = kwargs[key]
+				self.input = np.array(self.__signal.value)
 
 			# Switch to choose type of communication line
 			if key == 'type_of_line':
@@ -61,37 +64,29 @@ class CommLine():
 	def __choose_mode(self):
 		if self.__type_of_line == 0:
 			print("Simple")
-			self.output = self.__input.copy()
+			self.output = self.input.copy()
+
 		elif self.__type_of_line == 1:
 			print("Gauss")
-			self.__gauss()
+			self.output = self.input + np.random.default_rng().normal(self.__mu, 
+				self.__dispersion, self.input.size)
+
 		elif self.__type_of_line == 2:
 			self.__line_distor()
+
 		elif self.__type_of_line == 3:
-			self.__garmonic()
+			print("Garmonic")
+			noise = Garmonic(in_i = self.__dispersion, in_w0 = 0.5, in_time = self.__signal.argument).calc()
+			self.output = noise + self.input
+
 		elif self.__type_of_line == 4:
 			print("Relei")
-			self.__relei()
+			self.output = self.input + np.random.default_rng().rayleigh(
+				self.__dispersion, self.input.size)
 
 	# Work methods
-	def __gauss(self):
-		for i in range(len(self.__input)):
-			self.output.append(self.__input[i] + \
-			random.gauss(self.__mu, self.__dispersion))
-
 	def __line_distor(self):
 		pass
-
-	def __garmonic(self):
-		pass
-
-	def __relei(self):
-				
-		for i in range(len(self.__input)):
-			self.output.append(self.__input[i] + \
-			sqrt(random.gauss(self.__mu, self.__dispersion)**2 + \
-			random.gauss(self.__mu, self.__dispersion)**2)
-			)
 
 	# Debug methods
 	def print_input(self):
