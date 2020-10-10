@@ -49,21 +49,16 @@ class Signal():
 
 
 class Garmonic():
-    def __init__(self, in_i = 1, in_q = 0, in_w0 = 0, in_phase = 0, in_time = 0, in_dev = 0):
+    def __init__(self, in_i = 0, in_w0 = 0, in_phase = 0, in_time = 0, in_dev = 0):
 
-        self.I = in_i
-        self.Q = in_q
-        self.w0 = 2*pi*in_w0
-        self.phase = in_phase
-        self.time = np.array(in_time)
-        self.dev = 2*pi*in_dev
-        self.output = np.array(self.time)
+        self.__I = in_i
+        self.__w0 = 2*pi*in_w0
+        self.__phase = in_phase
+        self.__time = np.array(in_time)
+        self.__devia = 2*pi*in_dev
 
     def calc(self):
-        print(self.w0)
-        for t in range(self.time.size):
-            I = self.I*cos(self.dev * self.time[t] + self.phase)
-            Q = self.Q*sin(self.dev * self.time[t] + self.phase)
-            self.output.put(t, I*sin(self.w0 * self.time[t]) - Q*cos(self.w0 * self.time[t]))
-            print(self.w0 * self.time[t])
-        return self.output
+
+        I = self.__I * np.cos(self.__devia * self.__time + self.__phase)
+        Q = self.__I * np.sin(self.__devia * self.__time + self.__phase)
+        return (I * np.sin(self.__w0 * self.__time)) - (Q * np.cos(self.__w0 * self.__time))

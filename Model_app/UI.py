@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QSizePolicy, \
                             QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
                             QDoubleSpinBox, QCheckBox, QSpinBox, QComboBox
 from PyQt5.QtCore import Qt, QTimer
-from ExtUI import PlotPanel
+from ExtUI import PlotPanel, StarPanel
 
 MAX_PIXEL_SIZE = 16777215
 
@@ -30,24 +30,45 @@ class DemoWindow(QMainWindow):
         #Create and configure packer
         self.main_grid = QGridLayout(self.main_widget)
 
-        self.modul_panel = ModulPanel(self.main_widget)
+        self.modul_panel = ChangePanel(self.main_widget, "Тип модуляции", 
+                                    ["BPSK", 
+                                     "QPSK", 
+                                     "QPSK со сдвигом", 
+                                     "8-PSK", 
+                                     "APM",
+                                     "FM"])
         self.main_grid.addWidget(self.modul_panel, 0, 0)
 
-        self.line_panel = LinePanel(self.main_widget)
+        self.line_panel = ChangePanel(self.main_widget, "Тип канала связи", 
+                                    ["Канал без искажений", 
+                                     "Гауссовская помеха", 
+                                     "Линейные искажения", 
+                                     "Гармоническая помеха", 
+                                     "Релеевская помеха"])
         self.main_grid.addWidget(self.line_panel, 0, 1)
 
+        self.nf_panel = NFPanel(self.main_widget)
+        self.nf_panel.setVisible(0)
+        self.main_grid.addWidget(self.nf_panel, 1, 1)
+
+        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника")
+        self.main_grid.addWidget(self.transmitter_panel, 0, 2)
+
         self.plot_panel = PlotPanel(self.main_widget)
-        self.main_grid.addWidget(self.plot_panel, 1, 0, 1, -1)
+        self.main_grid.addWidget(self.plot_panel, 2, 0, 1, 2)
+
+        self.star_panel = StarPanel(self.main_widget)
+        self.main_grid.addWidget(self.star_panel, 2, 2)
 
         self.button_panel = ButtonPanel(self.main_widget)
-        self.main_grid.addWidget(self.button_panel, 2, 0, -1, -1)
+        self.main_grid.addWidget(self.button_panel, 3, 0, -1, -1)
 
         self.main_widget.setLayout(self.main_grid)
 
 
     def create_main_widget(self):
         self.main_widget = QWidget()
-        self.main_widget.setMinimumSize(800, 640)
+        self.main_widget.setMinimumSize(1000, 640)
         self.main_widget.setGeometry(0, 0, 800, 640)
         self.setCentralWidget(self.main_widget)
 
@@ -63,103 +84,51 @@ It may be used and modified with no restriction; raw copies as well as
 modified versions may be distributed without limitation."""
                                 )
 
-class ModulPanel(QWidget):
-    def __init__(self, parent = None):
-        QWidget.__init__(self, parent)
-        QWidget.setMinimumSize(self, 200, 300)    
-        QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        #Create main widget and layout
-        vertical_layout = QVBoxLayout()
-
-        #Create groupboxes
-        exciter_box = QGroupBox(self)
-        exciter_box.setTitle("Модуляция")
-
-        #Make main layout packer
-        inner_grid_layout = QGridLayout(exciter_box)
-        
-        #Create radiobuttons
-        self.bpsk_radiobutton = QRadioButton("BPSK", exciter_box)
-        self.bpsk_radiobutton.setChecked(1)
-        self.qpsk_radiobutton = QRadioButton("QPSK", exciter_box)
-        self.qpsk_shift = QRadioButton("QPSK со сдвигом", exciter_box)
-        self.opsk_radiobutton = QRadioButton("8-PSK", exciter_box)
-        self.apm_radiobutton = QRadioButton("APM", exciter_box)
-        self.fm_radiobutton = QRadioButton("FM", exciter_box)
-
-        #Pack radiobuttons
-        inner_grid_layout.addWidget(self.bpsk_radiobutton, 0, 0)
-        inner_grid_layout.addWidget(self.qpsk_radiobutton, 1, 0)
-        inner_grid_layout.addWidget(self.qpsk_shift, 2, 0)
-        inner_grid_layout.addWidget(self.opsk_radiobutton, 3, 0)
-        inner_grid_layout.addWidget(self.apm_radiobutton, 4, 0)
-        inner_grid_layout.addWidget(self.fm_radiobutton, 5, 0)
-
-        #Ending packers
-        exciter_box.setLayout(inner_grid_layout)
-        vertical_layout.addWidget(exciter_box)
-        self.setLayout(vertical_layout)
-
-
-class LinePanel(QWidget):
-    def __init__(self, parent = None):
+class ChangePanel(QWidget):
+    def __init__(self, parent = None, name = "", combo_box = []):
         QWidget.__init__(self, parent)
         QWidget.setMinimumSize(self, 200, 100)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        #Create main widget and layout
-        # vertical_layout = QVBoxLayout()
-
-        # #Create groupboxes
-        # setup_box = QGroupBox(self)
-        # setup_box.setTitle("Канал связи")
 
         #Make main layout packer
         inner_grid_layout = QGridLayout(self)
         
         # Create elements
-        self.name_label = QLabel("Выбор канала связи", self)
+        self.name_label = QLabel(name, self)
         self.name_label.setFixedSize(150, 15)
 
-        self.line_combobox = QComboBox(self)
-        self.line_combobox.addItems(["Канал без искажений", "Гауссовская помеха", "Линейные искажения", 
-            "Гармоническая помеха", "Релеевская помеха"])
+        self.combobox = QComboBox(self)
+        self.combobox.addItems(combo_box)
 
+        #Pack radiobuttons
+        inner_grid_layout.addWidget(self.name_label, 0, 0)
+        inner_grid_layout.addWidget(self.combobox, 1, 0)
+
+        #Ending packers
+        self.setLayout(inner_grid_layout)
+
+
+class NFPanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        QWidget.setMinimumSize(self, 200, 50)
+        QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        #Make main layout packer
+        inner_grid_layout = QHBoxLayout(self)
+        
         self.noise_label = QLabel("Сигнал/шум", self)
-        self.noise_label.setVisible(0)
-        self.noise_label.setFixedSize(90, 20)
 
-        # self.no_noise_radiobutton = QRadioButton("Канал без искажений", self)
-        # self.no_noise_radiobutton.setChecked(1)
-
-        # self.gauss_radiobutton = QRadioButton("Гауссовская помеха", self)
         self.noise_factor_spinbox = QDoubleSpinBox(self)
-        self.noise_factor_spinbox.setVisible(0)
         self.noise_factor_spinbox.setValue(10.0)
         self.noise_factor_spinbox.setRange(0.1, 100)
         self.noise_factor_spinbox.setSingleStep(0.1)
 
-        # self.line_distor_radiobutton = QRadioButton("Линейные искажения", self)
-        # self.line_distor_radiobutton.setEnabled(0)
-        # self.garmonic_radiobutton = QRadioButton("Гармоническая помеха", self)
-        # self.relei_radiobutton = QRadioButton("Релеевская помеха", self)
-
         # Pack elememnts
-        inner_grid_layout.addWidget(self.name_label, 0, 0)
-        inner_grid_layout.addWidget(self.line_combobox, 1, 0)
-        inner_grid_layout.addWidget(self.noise_label, 2, 0)
-        # inner_grid_layout.addWidget(self.no_noise_radiobutton, 3, 0, 1, -1)
-        # inner_grid_layout.addWidget(self.gauss_radiobutton, 4, 0, 1, 1)
-        inner_grid_layout.addWidget(self.noise_factor_spinbox, 2, 1)
-        # inner_grid_layout.addWidget(self.line_distor_radiobutton, 5, 0, 1, -1)
-        # inner_grid_layout.addWidget(self.garmonic_radiobutton, 6, 0, 1, -1)
-        # inner_grid_layout.addWidget(self.relei_radiobutton, 7, 0, 1, -1)
+        inner_grid_layout.addWidget(self.noise_label)
+        inner_grid_layout.addWidget(self.noise_factor_spinbox)
 
         #Ending packers
-        # setup_box.setLayout(inner_grid_layout)
-
-        # vertical_layout.addWidget(setup_box)
         self.setLayout(inner_grid_layout)
 
 
@@ -176,12 +145,12 @@ class ButtonPanel(QWidget):
         box_layout = QVBoxLayout(button_box)
 
         # Create buttons
-        self.exit_button = QPushButton("Выход", button_box)
+        # self.exit_button = QPushButton("Выход", button_box)
         self.plot_button = QPushButton("Построить", button_box)
 
         # Add to layout
         box_layout.addWidget(self.plot_button)
-        box_layout.addWidget(self.exit_button)
+        # box_layout.addWidget(self.exit_button)
         button_box.setLayout(box_layout)
 
         # Place main layout
