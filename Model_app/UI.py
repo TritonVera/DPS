@@ -35,7 +35,8 @@ class DemoWindow(QMainWindow):
                                      "QPSK", 
                                      "QPSK со сдвигом", 
                                      "8-PSK", 
-                                     "APM",
+                                     "APM8",
+                                     "APM16",
                                      "FM"])
         self.main_grid.addWidget(self.modul_panel, 0, 0)
 
@@ -47,11 +48,15 @@ class DemoWindow(QMainWindow):
                                      "Релеевская помеха"])
         self.main_grid.addWidget(self.line_panel, 0, 1)
 
+        self.signal_panel = SignalPanel(self.main_widget)
+        self.main_grid.addWidget(self.signal_panel, 1, 0)
+
         self.nf_panel = NFPanel(self.main_widget)
         self.nf_panel.setVisible(0)
         self.main_grid.addWidget(self.nf_panel, 1, 1)
 
-        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника")
+        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
+                                    ["Созвездия сигнал"])
         self.main_grid.addWidget(self.transmitter_panel, 0, 2)
 
         self.plot_panel = PlotPanel(self.main_widget)
@@ -68,8 +73,8 @@ class DemoWindow(QMainWindow):
 
     def create_main_widget(self):
         self.main_widget = QWidget()
-        self.main_widget.setMinimumSize(1000, 640)
-        self.main_widget.setGeometry(0, 0, 800, 640)
+        self.main_widget.setMinimumSize(1000, 600)
+        self.main_widget.setGeometry(0, 0, 1000, 640)
         self.setCentralWidget(self.main_widget)
 
 
@@ -111,13 +116,13 @@ class ChangePanel(QWidget):
 class NFPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setMinimumSize(self, 200, 50)
+        QWidget.setMinimumSize(self, 200, 70)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
         inner_grid_layout = QHBoxLayout(self)
         
-        self.noise_label = QLabel("Сигнал/шум", self)
+        self.noise_label = QLabel("Сигнал/шум (разы)", self)
 
         self.noise_factor_spinbox = QDoubleSpinBox(self)
         self.noise_factor_spinbox.setValue(10.0)
@@ -127,6 +132,40 @@ class NFPanel(QWidget):
         # Pack elememnts
         inner_grid_layout.addWidget(self.noise_label)
         inner_grid_layout.addWidget(self.noise_factor_spinbox)
+
+        #Ending packers
+        self.setLayout(inner_grid_layout)
+
+
+class SignalPanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        QWidget.setMinimumSize(self, 200, 70)
+        QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        #Make main layout packer
+        inner_grid_layout = QGridLayout(self)
+        
+        self.time_label = QLabel("Время сигнала, нс", self)
+
+        self.time_spinbox = QDoubleSpinBox(self)
+        self.time_spinbox.setValue(10)
+        self.time_spinbox.setRange(10, 1000)
+
+        # Pack elememnts
+        inner_grid_layout.addWidget(self.time_label, 0, 0)
+        inner_grid_layout.addWidget(self.time_spinbox, 0, 1)
+
+        self.freq_label = QLabel("Частота сигнала, ГГц", self)
+
+        self.freq_spinbox = QDoubleSpinBox(self)
+        self.freq_spinbox.setValue(1)
+        self.freq_spinbox.setRange(0.1, 100)
+        self.freq_spinbox.setSingleStep(0.1)
+
+        # Pack elememnts
+        inner_grid_layout.addWidget(self.freq_label, 1, 0)
+        inner_grid_layout.addWidget(self.freq_spinbox, 1, 1)
 
         #Ending packers
         self.setLayout(inner_grid_layout)

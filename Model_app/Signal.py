@@ -21,9 +21,14 @@ class Signal():
       self.frequency = 0                         #Частота
       self.amplitude = 0                         #Амплитуда
 
-      self.value = []
-      self.argument = []
+      self.data = np.zeros((2, 1))
+      # self.value = []
+      # self.argument = []
       
+  def clear(self):
+
+    self.data = np.zeros((2, 0))
+
   def Dots(self):                                #Расчет dots
     
     self.dots = int(self.dots_per_osc * self.time * self.frequency)
@@ -39,8 +44,9 @@ class Signal():
       Q = q_amp*sin(w * t + self.phase + phase_shift)
       S = I*sin(w0 * t) - Q*cos(w0 * t)
       
-      self.value.append(S)
-      self.argument.append(t)
+      self.data = np.append(self.data, [[S], [t]], axis = 1)
+      # self.value.append(S)
+      # self.argument.append(t)
       
   def Plot(self):                                #Отладочная отрисовка
     
@@ -49,10 +55,10 @@ class Signal():
 
 
 class Garmonic():
-    def __init__(self, in_i = 0, in_w0 = 0, in_phase = 0, in_time = 0, in_dev = 0):
+    def __init__(self, in_i = 0, in_f = 0, in_phase = 0, in_time = 0, in_dev = 0):
 
         self.__I = in_i
-        self.__w0 = 2*pi*in_w0
+        self.__w0 = 2*pi*in_f
         self.__phase = in_phase
         self.__time = np.array(in_time)
         self.__devia = 2*pi*in_dev

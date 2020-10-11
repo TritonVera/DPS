@@ -27,62 +27,71 @@ def close(): #Закрыть
 
 def plot_view(): #Построить
 
-    if ui.modul_panel.combobox.currentText() == "APM":
-        Modem.APM()
-    elif ui.modul_panel.combobox.currentText() == "FM":
-        Modem.FM()
-    else:
-        Modem.PM()
-    NKP.change_parameters(input_signal = Modem.signal)
-    Modem.signal.value = NKP.output.tolist()
-    stars = FindStar(input_signal = Modem.signal).stars()
+    change_modul()
+    change_line()
+    stars = FindStar(input_signal = NKP.signal).stars()
 
-    ui.plot_panel.draw_plot(NKP.output)
-    ui.star_panel.draw_plot(stars[0, :], stars[1, :])
+    ui.plot_panel.draw_plot(NKP.signal.data)
+    ui.star_panel.draw_plot(stars)
 
 def change_modul():
     
     Model.signal.phase = 0
+    Model.signal.frequency = ui.signal_panel.freq_spinbox.value()
+    Model.signal.time = ui.signal_panel.time_spinbox.value()
     if ui.modul_panel.combobox.currentText() == "BPSK":
         Modem.number = 2
+        Modem.PM()
     elif ui.modul_panel.combobox.currentText() == "QPSK":
         Modem.number = 4
+        Modem.PM()
     elif ui.modul_panel.combobox.currentText() == "8-PSK":
         Modem.number = 8
+        Modem.PM()
     elif ui.modul_panel.combobox.currentText() == "QPSK со сдвигом":
         Model.signal.phase = pi/4
         Modem.number = 4
+        Modem.PM()
+    elif ui.modul_panel.combobox.currentText() == "APM8":
+        Modem.number = 8
+        Modem.APM()
+    elif ui.modul_panel.combobox.currentText() == "APM16":
+        Modem.number = 16
+        Modem.APM()
+    elif ui.modul_panel.combobox.currentText() == "FM":
+        Modem.number = 2
+        Modem.FM()
 
 def change_line():
 
     ui.nf_panel.setVisible(1)
     if ui.line_panel.combobox.currentText() == "Канал без искажений":
         ui.nf_panel.setVisible(0)
-        NKP.change_parameters(type_of_line = '')
+        NKP.change_parameters(input_signal = Modem.signal, type_of_line = '')
     elif ui.line_panel.combobox.currentText() == "Гауссовская помеха":
-        NKP.change_parameters(type_of_line = 'gauss', dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
+        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'gauss', 
+            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
     elif ui.line_panel.combobox.currentText() == "Релеевская помеха":
-        NKP.change_parameters(type_of_line = 'relei', dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
+        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'relei', 
+            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
     elif ui.line_panel.combobox.currentText() == "Гармоническая помеха":
-        NKP.change_parameters(type_of_line = 'garmonic', dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
+        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'garmonic', 
+            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
     elif ui.line_panel.combobox.currentText() == "Линейные искажения":
-        NKP.change_parameters(type_of_line = 'line_distor', dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
+        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'line_distor', 
+            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
 
 #Привязка кнопок
-ui.modul_panel.combobox.activated.connect(change_modul)
-ui.line_panel.combobox.activated.connect(change_line)
-ui.nf_panel.noise_factor_spinbox.valueChanged.connect(change_line)
 ui.button_panel.plot_button.clicked.connect(plot_view)
-# ui.button_panel.exit_button.clicked.connect(close)
-
+ui.line_panel.combobox.activated.connect(change_line)
 
 # Конфигурирование модулятора
 Modem = Modem()
 
-Model.signal.time = 100
+Model.signal.time = ui.signal_panel.time_spinbox.value()
 Model.signal.amplitude = 1
 Model.signal.dots_per_osc = 50
-Model.signal.frequency = 0.5
+Model.signal.frequency = ui.signal_panel.freq_spinbox.value()
 Model.signal.phase = 0
 
 Modem.number = 2

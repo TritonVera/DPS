@@ -35,8 +35,9 @@ class Modem(Model):
   
   def init(self):
     
-    self.signal.value.clear()
-    self.signal.argument.clear()
+    self.signal.clear()
+    # self.signal.value.clear()
+    # self.signal.argument.clear()
     self.signal.Dots()
     
     self.Modulation(self.number)
@@ -70,9 +71,10 @@ class Modem(Model):
       self.signal.Point(now, phase_shift, amplitude_inc)
       
   def FM(self):
-    
-    self.signal.value.clear()
-    self.signal.argument.clear()
+
+    self.signal.clear()    
+    # self.signal.value.clear()
+    # self.signal.argument.clear()
     self.signal.Dots()
     
     self.Modulation(2)
