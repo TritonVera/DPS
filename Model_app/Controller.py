@@ -1,105 +1,107 @@
-#!/usr/bin/env bash
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Feb 14 21:21:17 2020
-
-@author: Григорий
-@author: Ivan
-"""
-import sys  # System function
-# import math
-
-from PyQt5.QtWidgets import QApplication
-from UI import DemoWindow as UI  # User interface classes
-from Model import Model
 from Modem import Modem
 from math import pi, sqrt
 from Line import CommLine, FindStar
-import numpy as np
 
-app = QApplication(sys.argv)
-ui = UI()
+class Controller():
 
-def close(): #Закрыть
+    def __init__(self, ui, modem, line):
+        self.__ui = ui
+        self.__modem = modem
+        self.__line = line
+        self.__osc_plot = ui.plot_panel
+        self.__star_plot = ui.star_panel
+        self.__noise_block = ui.nf_panel
+        self.__noise = self.__noise_block.noise_factor_spinbox
+        self.__choose_m = ui.modul_panel.combobox
+        self.__choose_l = ui.line_panel.combobox
 
-    sys.exit()
+    def plot_view(self):
+        # Расчет сигнала и созвездия
+        self.change_modul()
+        self.change_line()
+        stars = FindStar(input_signal = self.__line.signal).stars()
 
+        # Построение всех графиков
+        self.__osc_plot.draw_plot(self.__line.signal.data)
+        self.__star_plot.draw_plot(stars)
 
-def plot_view(): #Построить
+    def change_modul(self):
+        # Начальная настройка модулятора
+        self.__modem.signal.phase = 0                                                  # Начальная фаза сигнала
 
-    change_modul()
-    change_line()
-    stars = FindStar(input_signal = NKP.signal).stars()
+        # (TODO) For debug
+        self.__modem.signal.frequency = self.__ui.signal_panel.freq_spinbox.value()    # Частота несущей
+        self.__modem.signal.time = self.__ui.signal_panel.time_spinbox.value()         # Число отсчетов времени на котором генерируется сигнал
+        self.__modem.unit_time = 2/self.__modem.signal.frequency
 
-    ui.plot_panel.draw_plot(NKP.signal.data)
-    ui.star_panel.draw_plot(stars)
+        # Выбор типа модуляции и его донастройка
+        if self.__choose_m.currentText() == "BPSK":
+            self.__modem.number = 2
+            self.__modem.PM()
 
-def change_modul():
-    
-    Model.signal.phase = 0
-    Model.signal.frequency = ui.signal_panel.freq_spinbox.value()
-    Model.signal.time = ui.signal_panel.time_spinbox.value()
-    if ui.modul_panel.combobox.currentText() == "BPSK":
-        Modem.number = 2
-        Modem.PM()
-    elif ui.modul_panel.combobox.currentText() == "QPSK":
-        Modem.number = 4
-        Modem.PM()
-    elif ui.modul_panel.combobox.currentText() == "8-PSK":
-        Modem.number = 8
-        Modem.PM()
-    elif ui.modul_panel.combobox.currentText() == "QPSK со сдвигом":
-        Model.signal.phase = pi/4
-        Modem.number = 4
-        Modem.PM()
-    elif ui.modul_panel.combobox.currentText() == "APM8":
-        Modem.number = 8
-        Modem.APM()
-    elif ui.modul_panel.combobox.currentText() == "APM16":
-        Modem.number = 16
-        Modem.APM()
-    elif ui.modul_panel.combobox.currentText() == "FM":
-        Modem.number = 2
-        Modem.FM()
+        elif self.__choose_m.currentText() == "QPSK":
+            self.__modem.number = 4
+            self.__modem.PM()
 
-def change_line():
+        elif self.__choose_m.currentText() == "8-PSK":
+            self.__modem.number = 8
+            self.__modem.PM()
 
-    ui.nf_panel.setVisible(1)
-    if ui.line_panel.combobox.currentText() == "Канал без искажений":
-        ui.nf_panel.setVisible(0)
-        NKP.change_parameters(input_signal = Modem.signal, type_of_line = '')
-    elif ui.line_panel.combobox.currentText() == "Гауссовская помеха":
-        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'gauss', 
-            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
-    elif ui.line_panel.combobox.currentText() == "Релеевская помеха":
-        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'relei', 
-            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
-    elif ui.line_panel.combobox.currentText() == "Гармоническая помеха":
-        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'garmonic', 
-            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
-    elif ui.line_panel.combobox.currentText() == "Линейные искажения":
-        NKP.change_parameters(input_signal = Modem.signal, type_of_line = 'line_distor', 
-            dispersion = sqrt(0.707/ui.nf_panel.noise_factor_spinbox.value()), mu = 0)
+        elif self.__choose_m.currentText() == "QPSK со сдвигом":
+            self.__modem.signal.phase = pi/4
+            self.__modem.number = 4
+            self.__modem.PM()
 
-#Привязка кнопок
-ui.button_panel.plot_button.clicked.connect(plot_view)
-ui.line_panel.combobox.activated.connect(change_line)
+        elif self.__choose_m.currentText() == "APM8":
+            self.__modem.number = 8
+            self.__modem.APM()
 
-# Конфигурирование модулятора
-Modem = Modem()
+        elif self.__choose_m.currentText() == "APM16":
+            self.__modem.number = 16
+            self.__modem.APM()
 
-Model.signal.time = ui.signal_panel.time_spinbox.value()
-Model.signal.amplitude = 1
-Model.signal.dots_per_osc = 50
-Model.signal.frequency = ui.signal_panel.freq_spinbox.value()
-Model.signal.phase = 0
+        elif self.__choose_m.currentText() == "FM":
+            self.__modem.number = 2
+            self.__modem.FM()
 
-Modem.number = 2
-Modem.unit_time = 1/Model.signal.frequency
+    def show_param(self):
 
-# Конфигурирование канала связи
-NKP = CommLine()
-""" Конец реализации конструктора """
+        if self.__choose_l.currentText() == "Канал без искажений":
+            self.__noise_block.setVisible(0)
+        else:
+            self.__noise_block.setVisible(1)
 
-ui.show()
-sys.exit(app.exec_())
+    def change_line(self):
+        # Выбор типа канала связи
+        if self.__choose_l.currentText() == "Канал без искажений":
+            self.__line.change_parameters(
+                input_signal = Modem.signal, 
+                type_of_line = '')
+
+        elif self.__choose_l.currentText() == "Гауссовская помеха":
+            self.__line.change_parameters(
+                input_signal = Modem.signal, 
+                type_of_line = 'gauss', 
+                dispersion = sqrt(0.707/self.__noise.value()), 
+                mu = 0)
+
+        elif self.__choose_l.currentText() == "Релеевская помеха":
+            self.__line.change_parameters(
+                input_signal = Modem.signal, 
+                type_of_line = 'relei', 
+                dispersion = sqrt(0.707/self.__noise.value()), 
+                mu = 0)
+
+        elif self.__choose_l.currentText() == "Гармоническая помеха":
+            self.__line.change_parameters(
+                input_signal = Modem.signal,
+                type_of_line = 'garmonic', 
+                dispersion = sqrt(0.707/self.__noise.value()), 
+                mu = 0)
+
+        elif self.__choose_l.currentText() == "Линейные искажения":
+            self.__line.change_parameters(
+                input_signal = Modem.signal, 
+                type_of_line = 'line_distor', 
+                dispersion = sqrt(0.707/self.__noise.value()), 
+                mu = 0)

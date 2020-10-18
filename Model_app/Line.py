@@ -101,12 +101,15 @@ class FindStar():
         # Init new input signal and output
         self.__signal = input_signal
         self.__input = np.array(self.__signal.data[0, :])
-        self.__time_to_block = 1/self.__signal.frequency
+        self.__time_to_block = 2/self.__signal.frequency
         self.__point_to_block = int(self.__signal.dots * self.__time_to_block/self.__signal.time)
         self.__time_to_point = self.__time_to_block/self.__point_to_block
         self.__times = np.arange(0, self.__time_to_block, self.__time_to_point)
         self.__I = Garmonic(in_i = 1, in_f = self.__signal.frequency, in_time = self.__times).calc()
         self.__Q = Garmonic(in_i = 1, in_f = self.__signal.frequency, in_phase = pi/2, in_time = self.__times).calc()
+        self.__ref = Garmonic(in_i = 1, in_f = self.__signal.frequency, in_time = self.__times).calc() + \
+                1j * Garmonic(in_i = 1, in_f = self.__signal.frequency, in_phase = pi/2, in_time = self.__times).calc()
+        print(self.__ref)
 
     def stars(self):
         num_of_blocks = np.int32(np.floor(self.__signal.time/self.__time_to_block))
