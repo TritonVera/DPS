@@ -15,14 +15,14 @@ from Controller import Controller
 
 Modem = Modem()
 
-Modem.signal.time = 20
+Modem.signal.time = 16
 Modem.signal.amplitude = 1
 Modem.signal.dots_per_osc = 50
-Modem.signal.frequency = 0.5
+Modem.signal.frequency = 1
 Modem.signal.phase = 0
 
 Modem.number = 2
-Modem.unit_time = 1
+Modem.unit_time = 2/Modem.signal.frequency
 
 NKP = CommLine()
 

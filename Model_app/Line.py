@@ -105,24 +105,28 @@ class FindStar():
         self.__point_to_block = int(self.__signal.dots * self.__time_to_block/self.__signal.time)
         self.__time_to_point = self.__time_to_block/self.__point_to_block
         self.__times = np.arange(0, self.__time_to_block, self.__time_to_point)
-        self.__I = Garmonic(in_i = 1, in_f = self.__signal.frequency, in_time = self.__times).calc()
-        self.__Q = Garmonic(in_i = 1, in_f = self.__signal.frequency, in_phase = pi/2, in_time = self.__times).calc()
         self.__ref = Garmonic(in_i = 1, in_f = self.__signal.frequency, in_time = self.__times).calc() + \
-                1j * Garmonic(in_i = 1, in_f = self.__signal.frequency, in_phase = pi/2, in_time = self.__times).calc()
-        print(self.__ref)
+                (1j * Garmonic(in_i = 1, in_f = self.__signal.frequency, in_phase = 0.5 * pi, in_time = self.__times).calc())
 
     def stars(self):
         num_of_blocks = np.int32(np.floor(self.__signal.time/self.__time_to_block))
-        coords = np.zeros((2, num_of_blocks))
-        dis_i = np.trapz(self.__I * self.__I, self.__times)
-        dis_q = np.trapz(self.__Q * self.__Q, self.__times)
+        coords = np.zeros(num_of_blocks, dtype = np.complex)
 
         for i in np.arange(num_of_blocks):
-            dis_s = np.trapz(self.__input[(i * self.__point_to_block):((i+1) * self.__point_to_block)]**2, self.__times)
-            coords[0, i] = np.trapz(self.__input[(i * self.__point_to_block):
-                                                ((i+1) * self.__point_to_block)] 
-                                    * self.__I, self.__times) / (np.sqrt(dis_i * dis_s))
-            coords[1, i] = np.trapz(self.__input[(i * self.__point_to_block):
-                                                ((i+1) * self.__point_to_block)] 
-                                    * self.__Q, self.__times) / (np.sqrt(dis_q * dis_s))
+            s = self.__input[(i * self.__point_to_block):((i+1) * self.__point_to_block)]
+            coords[i] = np.trapz(s * self.__ref.real, self.__times) + \
+                     (1j*np.trapz(s * self.__ref.imag, self.__times))
         return coords
+
+# class BitErrorRatio():
+
+#     def __init__(self, input_array = np.zeros(0, dtype = np.complex)):
+#         self.__points = input_array
+#         self.__error = 0
+
+#     def calc(self):
+#         for point in self.__points:
+#             if (point.real < 4) and (point.real > 2):
+#                 self.__error = np.abs(point.real - 3)
+#                 if (point.imag < 4) and (point.imag > 2):
+#                     self.__error = np.abs(point.real)

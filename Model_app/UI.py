@@ -35,8 +35,8 @@ class DemoWindow(QMainWindow):
                                      "QPSK", 
                                      "QPSK со сдвигом", 
                                      "8-PSK", 
-                                     "APM8",
-                                     "APM16",
+                                     "8-QAM",
+                                     "16-QAM",
                                      "FM"])
         self.main_grid.addWidget(self.modul_panel, 0, 0)
 
@@ -48,8 +48,8 @@ class DemoWindow(QMainWindow):
                                      "Релеевская помеха"])
         self.main_grid.addWidget(self.line_panel, 0, 1)
 
-        self.signal_panel = SignalPanel(self.main_widget)
-        self.main_grid.addWidget(self.signal_panel, 1, 0)
+        # self.signal_panel = SignalPanel(self.main_widget)
+        # self.main_grid.addWidget(self.signal_panel, 1, 0)
 
         self.nf_panel = NFPanel(self.main_widget)
         self.nf_panel.setVisible(0)

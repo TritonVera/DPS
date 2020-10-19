@@ -22,6 +22,7 @@ class Signal():
       self.amplitude = 0                         #Амплитуда
 
       self.data = np.zeros((2, 1))
+      self.modul = 'None'
       # self.value = []
       # self.argument = []
       
@@ -53,11 +54,18 @@ class Signal():
     fig,(ax1) = pyplot.subplots(1,1, figsize = (10,5))
     ax1.plot(self.argument, self.value)
 
+  def dispersion(self):
+    return np.sqrt(np.trapz(self.data[0, :]**2, self.data[1, :]) / self.time)
+
 
 class Garmonic():
-    def __init__(self, in_i = 0, in_f = 0, in_phase = 0, in_time = 0, in_dev = 0):
+    def __init__(self, in_i = 0, in_q = None, in_f = 0, in_phase = 0, in_time = 0, in_dev = 0):
 
         self.__I = in_i
+        self.__var = 0
+        if in_q != None:
+            self.__Q = in_q
+            self.__var = 1
         self.__w0 = 2*pi*in_f
         self.__phase = in_phase
         self.__time = np.array(in_time)
@@ -65,6 +73,12 @@ class Garmonic():
 
     def calc(self):
 
-        I = self.__I * np.cos(self.__devia * self.__time + self.__phase)
-        Q = self.__I * np.sin(self.__devia * self.__time + self.__phase)
-        return (I * np.sin(self.__w0 * self.__time)) - (Q * np.cos(self.__w0 * self.__time))
+        if self.__var == 0:
+            I = self.__I * np.cos(self.__devia * self.__time + self.__phase)
+            Q = self.__I * np.sin(self.__devia * self.__time + self.__phase)
+            return (I * np.sin(self.__w0 * self.__time)) - (Q * np.cos(self.__w0 * self.__time))
+        else:
+            return (self.__I * np.sin(self.__w0 * self.__time)) - (self.__Q * np.cos(self.__w0 * self.__time))
+
+    def calc_with_time(self):
+        return np.vstack((self.calc(), self.__time))
