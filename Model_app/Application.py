@@ -15,7 +15,7 @@ from Controller import Controller
 
 Modem = Modem()
 
-Modem.signal.time = 16
+Modem.signal.time = 64
 Modem.signal.amplitude = 1
 Modem.signal.dots_per_osc = 50
 Modem.signal.frequency = 1

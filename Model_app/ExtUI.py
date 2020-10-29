@@ -34,7 +34,7 @@ class PlotPanel(QWidget):
 
         self.signal.setData(x_list, y_list)
         self.signal.setPen(y_pen)
-        self.title.attach(self.plot)
+        # self.title.attach(self.plot)
         self.signal.attach(self.plot)
 
         self.plot.replot()
