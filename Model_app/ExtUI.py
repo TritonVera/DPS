@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QGroupBox, QRadioButton, \
                             QDoubleSpinBox
 from PyQt5.QtGui import QPen, QBrush, QColor
 from PyQt5.QtCore import Qt
-from qwt import QwtPlot, QwtPlotCurve, QwtPlotGrid, QwtText
+from qwt import QwtPlot, QwtPlotCurve, QwtPlotGrid, QwtPlotMarker
 
 #Класс графического полотна
 class PlotPanel(QWidget):
@@ -15,8 +15,6 @@ class PlotPanel(QWidget):
 
         self.plot = QwtPlot(self)
         self.signal = QwtPlotCurve()
-        self.title = QwtText()
-        self.title.setText('0021302')
         self.draw_plot()
 
         vertical_layout.addWidget(self.plot)
@@ -37,9 +35,33 @@ class PlotPanel(QWidget):
         # self.title.attach(self.plot)
         self.signal.attach(self.plot)
 
+        self.draw_div(x_list[-1])
+
+    def draw_div(self, end):
+        self.markers = []
+        l_color = QColor(16, 16, 16)
+        l_pen = QPen(l_color)
+        l_pen.setWidth(2)
+        l_pen.setStyle(Qt.DashLine)
+        for i in np.arange(np.floor(end/2), dtype = np.int):
+            marker = QwtPlotMarker()
+            self.markers.append(marker)
+            self.markers[i].setValue((1+i) * 2.0, 0.0 )
+            self.markers[i].setLineStyle(QwtPlotMarker.VLine)
+        # self.first_marker.setLabelAlignment(Qt.AlignRight | Qt.AlignBottom )
+            self.markers[i].setLinePen(l_pen)
+
+            self.markers[i].attach(self.plot)
+
+        # self.d_marker2 = Qwt.QwtPlotMarker()
+        # self.d_marker2.setLineStyle( Qwt.QwtPlotMarker.HLine )
+        # self.d_marker2.setLabelAlignment( Qt.AlignRight | Qt.AlignBottom )
+        # self.d_marker2.setLinePen( QColor( 200, 150, 0 ), 0, Qt.DashDotLine )
+        # self.d_marker2.setSymbol( Qwt.QwtSymbol( Qwt.QwtSymbol.Diamond,QColor( Qt.yellow ), QColor( Qt.green ), QSize( 8, 8 ) ) )
+        # self.d_marker2.attach( self )
+
         self.plot.replot()
         self.plot.show()
-
 
 class StarPanel(QWidget):
     def __init__(self, parent = None):

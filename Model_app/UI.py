@@ -31,7 +31,7 @@ class DemoWindow(QMainWindow):
         self.main_grid = QGridLayout(self.main_widget)
 
         self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
-                                    ["Созвездия сигнал",
+                                    ["Созвездия сигнала",
                                      "Корреляционный приёмник"])
         self.main_grid.addWidget(self.transmitter_panel, 0, 0)
 
@@ -43,7 +43,8 @@ class DemoWindow(QMainWindow):
                                      "8-АФМ",
                                      "16-АФМ",
                                      "16-КАМ",
-                                     "ЧМ"])
+                                     "ЧМ",
+                                     "ММС"])
         self.main_grid.addWidget(self.modul_panel, 0, 1)
 
         self.line_panel = ChangePanel(self.main_widget, "Тип канала связи", 
@@ -54,11 +55,11 @@ class DemoWindow(QMainWindow):
                                      "Релеевская помеха"])
         self.main_grid.addWidget(self.line_panel, 0, 2)
 
-        self.errors_panel = ChangePanel(self.main_widget, "Синхронизация", 
+        self.error_panel = ChangePanel(self.main_widget, "Синхронизация", 
                                     ["Когерентный приём", 
                                      "Расстройка по частоте", 
                                      "Фазовая расстройка"])
-        self.main_grid.addWidget(self.errors_panel, 0, 3)
+        self.main_grid.addWidget(self.error_panel, 0, 3)
 
         # self.signal_panel = SignalPanel(self.main_widget)
         # self.main_grid.addWidget(self.signal_panel, 1, 0)

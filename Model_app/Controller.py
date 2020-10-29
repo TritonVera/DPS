@@ -15,13 +15,20 @@ class Controller():
         self.__noise = self.__noise_block.noise_factor_spinbox
         self.__choose_m = ui.modul_panel.combobox
         self.__choose_l = ui.line_panel.combobox
+        self.__choose_s = ui.error_panel.combobox
 
     def plot_view(self):
         # Расчет сигнала и созвездия
         self.change_modul()
         self.change_line()
         # stars_in = FindStar(input_signal = self.__modem.signal).stars()
-        stars_out = FindStar(input_signal = self.__line.signal).stars()
+        devia = 0
+        phase = 0
+        if self.__choose_s.currentText() == "Расстройка по частоте":
+            devia = 0.1 # TODO Manage from UI
+        elif self.__choose_s.currentText() == "Фазовая расстройка":
+            phase = pi/6 # TODO Manage from UI
+        stars_out = FindStar(self.__line.signal, devia, phase).stars()
 
         # Построение всех графиков
         self.__osc_plot.draw_plot(self.__line.signal.data[:,0:600])
@@ -69,10 +76,14 @@ class Controller():
             self.__modem.APM()
 
         elif self.__choose_m.currentText() == "16-КАМ":
-            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -3.5, 3.5, 0.5)
-            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -3.5, 3.5, 0.5)
+            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -4, 4, 1)
+            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -4, 4, 1)
             self.__modem.number = 16
             self.__modem.QAM()
+
+        elif self.__choose_m.currentText() == "ЧМ":
+            self.__modem.number = 2
+            self.__modem.FM()
 
         elif self.__choose_m.currentText() == "ММС":
             self.__modem.number = 2
