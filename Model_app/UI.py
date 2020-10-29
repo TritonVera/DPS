@@ -30,15 +30,21 @@ class DemoWindow(QMainWindow):
         #Create and configure packer
         self.main_grid = QGridLayout(self.main_widget)
 
+        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
+                                    ["Созвездия сигнал",
+                                     "Корреляционный приёмник"])
+        self.main_grid.addWidget(self.transmitter_panel, 0, 0)
+
         self.modul_panel = ChangePanel(self.main_widget, "Тип модуляции", 
-                                    ["BPSK", 
-                                     "QPSK", 
-                                     "QPSK со сдвигом", 
-                                     "8-PSK", 
-                                     "8-QAM",
-                                     "16-QAM",
-                                     "FM"])
-        self.main_grid.addWidget(self.modul_panel, 0, 0)
+                                    ["2-ФМ", 
+                                     "4-ФМ", 
+                                     "4-ФМ со сдвигом", 
+                                     "8-ФМ", 
+                                     "8-АФМ",
+                                     "16-АФМ",
+                                     "16-КАМ",
+                                     "ЧМ"])
+        self.main_grid.addWidget(self.modul_panel, 0, 1)
 
         self.line_panel = ChangePanel(self.main_widget, "Тип канала связи", 
                                     ["Канал без искажений", 
@@ -46,24 +52,27 @@ class DemoWindow(QMainWindow):
                                      "Линейные искажения", 
                                      "Гармоническая помеха", 
                                      "Релеевская помеха"])
-        self.main_grid.addWidget(self.line_panel, 0, 1)
+        self.main_grid.addWidget(self.line_panel, 0, 2)
+
+        self.errors_panel = ChangePanel(self.main_widget, "Синхронизация", 
+                                    ["Когерентный приём", 
+                                     "Расстройка по частоте", 
+                                     "Фазовая расстройка"])
+        self.main_grid.addWidget(self.errors_panel, 0, 3)
 
         # self.signal_panel = SignalPanel(self.main_widget)
         # self.main_grid.addWidget(self.signal_panel, 1, 0)
 
         self.nf_panel = NFPanel(self.main_widget)
         self.nf_panel.setVisible(0)
-        self.main_grid.addWidget(self.nf_panel, 1, 1)
+        self.main_grid.addWidget(self.nf_panel, 1, 2)
 
-        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
-                                    ["Созвездия сигнал"])
-        self.main_grid.addWidget(self.transmitter_panel, 0, 2)
 
         self.plot_panel = PlotPanel(self.main_widget)
         self.main_grid.addWidget(self.plot_panel, 2, 0, 1, 2)
 
         self.star_panel = StarPanel(self.main_widget)
-        self.main_grid.addWidget(self.star_panel, 2, 2)
+        self.main_grid.addWidget(self.star_panel, 2, 2, 1, 2)
 
         self.button_panel = ButtonPanel(self.main_widget)
         self.main_grid.addWidget(self.button_panel, 3, 0, -1, -1)

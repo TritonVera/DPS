@@ -69,7 +69,7 @@ class CommLine():
             print("Simple")
 
         elif self.__type_of_line == 1:
-            self.__output = self.__input + np.random.default_rng().normal(self.__mu, 
+            self.__output = self.__input + np.random.normal(self.__mu, 
                 self.__dispersion, self.__input.size)
             print("Gauss")
 
@@ -82,7 +82,7 @@ class CommLine():
             print("Garmonic")
 
         elif self.__type_of_line == 4:
-            self.__output = self.__input + np.random.default_rng().rayleigh(
+            self.__output = self.__input + np.random.rayleigh(
                 self.__dispersion, self.__input.size)
             print("Relei")
         self.signal.data = np.delete(np.vstack((self.__output, self.signal.data)), 1, axis = 0)

@@ -67,14 +67,11 @@ class Modem(Model):
       phase_shift = 2*pi*self.State(self.mod_code[unit_number])/self.number
       self.signal.Point(now, phase_shift)
       
-  def APM(self):                      
+  def QAM(self):                      
     
     self.init()
 
-    if self.number == 8:
-         self.signal.modul = '8QAM'
-    elif self.number == 16:
-         self.signal.modul = '16QAM'
+    self.signal.modul = '16QAM'
 
     for i in range(int(self.signal.time/self.unit_time)):
         # print(self.State(self.mod_code[i]))
@@ -90,18 +87,6 @@ class Modem(Model):
             in_f = self.signal.frequency, 
             in_time = times).calc_with_time()
         self.signal.data = np.hstack((self.signal.data, calc_block))
-
-
-    # for i in range(0,self.signal.dots):
-      
-    #   now = i*self.signal.time/self.signal.dots
-    #   unit_number = int(now/self.unit_time)
-    #   unit_value = self.State(self.mod_code[unit_number])
-      
-    #   phase_shift = 2*pi*unit_value/self.number
-    #   amplitude_inc = (unit_value + 1)/self.number
-      
-    #   self.signal.Point(now, phase_shift, amplitude_inc)
       
   def FM(self):
 

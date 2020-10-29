@@ -24,7 +24,7 @@ class Controller():
         stars_out = FindStar(input_signal = self.__line.signal).stars()
 
         # Построение всех графиков
-        self.__osc_plot.draw_plot(self.__line.signal.data)
+        self.__osc_plot.draw_plot(self.__line.signal.data[:,0:600])
         self.__star_plot.draw_plot(stars_out)
 
     def change_modul(self):
@@ -39,36 +39,42 @@ class Controller():
         # self.__modem.unit_time = 2/self.__modem.signal.frequency
 
         # Выбор типа модуляции и его донастройка
-        if self.__choose_m.currentText() == "BPSK":
+        if self.__choose_m.currentText() == "2-ФМ":
             self.__modem.number = 2
             self.__modem.PM()
 
-        elif self.__choose_m.currentText() == "QPSK":
+        elif self.__choose_m.currentText() == "4-ФМ":
             self.__modem.number = 4
             self.__modem.PM()
 
-        elif self.__choose_m.currentText() == "8-PSK":
+        elif self.__choose_m.currentText() == "8-ФМ":
             self.__modem.number = 8
             self.__modem.PM()
 
-        elif self.__choose_m.currentText() == "QPSK со сдвигом":
+        elif self.__choose_m.currentText() == "4-ФМ со сдвигом":
             self.__modem.signal.phase = pi/4
             self.__modem.number = 4
             self.__modem.PM()
 
-        elif self.__choose_m.currentText() == "8-QAM":
-            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -3.5, 3.5, 0.5)
-            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -3.5, 3.5, 0.5)
+        elif self.__choose_m.currentText() == "8-АФМ":
+            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -2.5, 2.5, 0.5)
+            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -2.5, 2.5, 0.5)
             self.__modem.number = 8
             self.__modem.APM()
 
-        elif self.__choose_m.currentText() == "16-QAM":
-            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -3.5, 3.5, 0.5)
-            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -3.5, 3.5, 0.5)
+        elif self.__choose_m.currentText() == "16-АФМ":
+            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -2.5, 2.5, 0.5)
+            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -2.5, 2.5, 0.5)
             self.__modem.number = 16
             self.__modem.APM()
 
-        elif self.__choose_m.currentText() == "FM":
+        elif self.__choose_m.currentText() == "16-КАМ":
+            self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -3.5, 3.5, 0.5)
+            self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -3.5, 3.5, 0.5)
+            self.__modem.number = 16
+            self.__modem.QAM()
+
+        elif self.__choose_m.currentText() == "ММС":
             self.__modem.number = 2
             self.__modem.FM()
 
