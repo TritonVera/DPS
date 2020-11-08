@@ -5,86 +5,214 @@ Created on Fri Sep 18 16:11:01 2020
 @author: Григорий
 """
 
-import random
+# =============================================================================
+# Класс модем - используется для формирования заданного типа сигнала и 
+# модуляции его некоторой последовательностью. Является наследником Model.
 
+# Сигнал как объект создан в Model и является переменной класса.
+
+# code_type определяет тип последовательности: случайная или последовательная в
+# размер созвездия.
+
+# Для случайной требуется указать время символа unit_time.
+# =============================================================================
+
+import random
 from Model import Model
 from math import pi, log2
 
+###############################################################################
 class Modem(Model):
   
   def __init__(self):
+
+# Параметры модулятора:   
+    self.number = 0                         # Размерность созвездия
+    self.unit_time = 0                      # Длительность символа в сигнале
+    self.unit_dots = 0                      # Количество точек на символ
+    self.mod_code = []                      # Модуляционная последовательность
+    self.code_type = "full"                 # Тип последовательности:
+                                            # "full" в размер созвездия
+                                            # "prob" случайная, количество:
+                                            # время сигнала/время символа
+                                            
+#------------------------------------------------------------------------------
+# Формирование мод.последовательности в размер созвездия (кодировщик1):
+# Выставляет время символа, так чтобы число символов соотвествовало числу
+# cостояний созвездия
     
-    self.number = 0
-    self.unit_time = 0                      #Длительность символа в Mod_code
-    self.mod_code = []                      #Модуляционная последовательность
-  
-  def Modulation(self, number):             #Формирование Mod_code
+  def Code1(self):
     
     self.mod_code.clear()
-    number = int(log2(number))
+    unit_number = int(log2(self.number))
+    self.unit_time = self.signal.time/self.number                              # Определение времени символа в зависимости
+                                                                               # от их количества и времени всего сигнала.
+    array = [i for i in range(0, self.number)]                                 # Массив символов.
+    if self.code_type == "full_mix":                                           # Перемешивание массива по требованию.
+      random.shuffle(array)
+    
+    for i in range(0, self.number):
+      
+      symbol = bin(array[i])[2:] 
+      symbol = list(map(int,symbol))                                           # Двоичный номер состояния созвездия
+                                                                               # т.е символ.
+      if len(symbol) < unit_number:                                         
+        for i in range(0, unit_number - len(symbol)):                          # Дополнение нулями до размера символа.
+          symbol.insert(0, 0)
+
+      self.mod_code.append(symbol)   
+
+#------------------------------------------------------------------------------
+# Формирование слуайной мод.последовательности (кодировщик2):
+# Время символа задается самостоятельно, размер последовательности
+# количеству поместившихся символов.
+      
+  def Code2(self):             
+    
+    self.mod_code.clear()
+    number = int(log2(self.number))
+    
     for i in range(0,int(self.signal.time/self.unit_time)):
       unit = []
       for j in range(0, number):
         unit.append(random.randint(0,1))
       self.mod_code.append(unit)
+
+#------------------------------------------------------------------------------
+# Вывод мод.последовательности:
+ 
+  def CodePrint(self):
+    
+    print("")
+    print("Кодирующая последовательность: ")
+    print("")
+    for i in range(0, len(self.mod_code)):
+      print('{0:4}'.format(i), " ",self.mod_code[i])
+     
+#==============================================================================
+# Отладка кодировщиков:
+  
+  def CodeTest(self, n = 1):
+    
+    self.number = 16
+    self.signal.time = 10
+    
+    if n == 1:
+      self.Code1()
+    if n == 2:
+      self.unit_time = self.signal.time/self.number                            # Время символа выбрано так, чтобы поместилось
+      self.Code2()                                                             # self.number символов
+   
+    self.CodePrint()
+
+###############################################################################
+# Инициализация модулятора:
+# Инициализация сигнала и расчет мод.последовательности.
+  
+  def Init(self):
+    
+    self.signal.Init()
+
+    if self.code_type == "full" or self.code_type == "full_mix":
+      self.Code1()
+    if self.code_type == "prob":
+      self.Code2()
+      
+    self.CodePrint()
+    
+    self.unit_dots = self.signal.dots_num(self.unit_time)                      # Расчет количества точек на символ         
+     
+#------------------------------------------------------------------------------       
+# Номер состояния в десятичной системе:
       
   def State(self,In):
     
     check = "".join(map(str,In))
     return(int(check,2))
-  
-  def init(self):
-    
-    self.signal.clear()
-    # self.signal.value.clear()
-    # self.signal.argument.clear()
-    self.signal.Dots()
-    
-    self.Modulation(self.number)
-    print(self.mod_code)
-  
+
+#------------------------------------------------------------------------------
+# Фазоманипулированный сигнал:
+
   def PM(self):                      
     
-    self.init()
-    
-    for i in range(0,self.signal.dots):
+    self.Init()
+
+    for i in range(0, len(self.mod_code)):                                     # Цикл по символам.
       
-      now = i*self.signal.time/self.signal.dots
-      unit_number = int(now/self.unit_time)
-      
-      phase_shift = 2*pi*self.State(self.mod_code[unit_number])/self.number
-      self.signal.Point(now, phase_shift)
-      
+      state = self.State(self.mod_code[i])                                     # Перевод символа в десятичную систему.
+      phase_shift = 2*pi*state/self.number                                     # Расчет фазы.
+
+      for j in range(0 , self.unit_dots):                                      # Цикл по точкам символа.
+        now = self.signal.now(j) + i*self.unit_time                            
+        self.signal.Point(now, phase_shift)
+        
+#------------------------------------------------------------------------------
+# Амплитудофазоманипулированный сигнал:
+
   def APM(self):                      
     
-    self.init()
-    
-    for i in range(0,self.signal.dots):
-      
-      now = i*self.signal.time/self.signal.dots
-      unit_number = int(now/self.unit_time)
-      unit_value = self.State(self.mod_code[unit_number])
-      
-      phase_shift = 2*pi*unit_value/self.number
-      amplitude_inc = (unit_value + 1)/self.number
-      
-      self.signal.Point(now, phase_shift, amplitude_inc)
-      
-  def FM(self):
+    self.Init()
 
-    self.signal.clear()    
-    # self.signal.value.clear()
-    # self.signal.argument.clear()
-    self.signal.Dots()
-    
-    self.Modulation(2)
-    print(self.mod_code)
-    
-    for i in range(0,self.signal.dots):
+    for i in range(0, len(self.mod_code)):                                     # Схема аналогична PM.
       
-      now = i*self.signal.time/self.signal.dots
-      unit_number = int(now/self.unit_time)
-      unit_value = self.State(self.mod_code[unit_number])
+      state = self.State(self.mod_code[i])
+      amp_inc = 1
       
-      deviation = (-1 + 2*unit_value)*self.signal.frequency/4
-      self.signal.Point(now, 0, 1, deviation)
+      if state <= 4:                                                           # Отличие: фазовый круг обнуляется 
+        phase_shift = 2*pi*state/4                                             # через 4 символа, а амлитуда увеличивается
+                                                                               # вдвое.
+      if state > 4 and state < 16:
+        amp_inc  = 2
+        if self.number == 8:
+          phase_shift = 2*pi*(state - 4)/4
+        if self.number == 8:
+          phase_shift = 2*pi*(state - 4)/8
+        
+      for j in range(0 , self.unit_dots):
+        now = self.signal.now(j) + i*self.unit_time
+        self.signal.Point(now, phase_shift, [amp_inc, amp_inc])
+        
+#------------------------------------------------------------------------------
+# Частотномодулированный сигнал:
+        
+  def FM(self):
+    
+    self.Init()
+    
+    for i in range(0, len(self.mod_code)):                                     # Схема аналогична PM                         
+      
+      state = self.State(self.mod_code[i])
+      deviation = (-1 + 2*state)*self.signal.frequency/4                       # Отличие: вместо фазы меняется частота
+
+      for j in range(0 , self.unit_dots):                                               
+        now = self.signal.now(j) + i*self.unit_time
+        self.signal.Point(now, freq_dev = deviation)
+
+#------------------------------------------------------------------------------
+# Сигнал с минимальным сдвигом:
+        
+  def MSK(self, shift = pi/2):
+    
+    self.signal.phase = shift
+    self.PM()
+    
+    self.signal.phase = 0
+
+#==============================================================================
+# Отладка модулятора: 
+  
+  def Test(self):
+    
+    self.number = 4
+    self.signal.time = 10
+    self.signal.frequency = 1
+    
+    self.unit_time = self.signal.time/self.number                              #Время символа требуется указывать 
+    self.code_type = "full"                                                    #для случайной последовательности
+    
+#    self.PM()
+#    self.APM()
+#    self.FM()
+    self.MSK()
+    
+    self.signal.Plot()

@@ -7,33 +7,36 @@ Created on Fri Sep 18 16:27:40 2020
 
 from Model import Model
 from Modem import Modem
-from math import pi
-from Line import CommLine
+from Processor import Processor
+
+#------------------------------------------------------------------------------
+# Текстовый режим
+#------------------------------------------------------------------------------
+# Создание объектов Model:
 
 Modem = Modem()
-NKP = CommLine()
+Processor = Processor()
+
+#------------------------------------------------------------------------------
+# Ввод параметров сигнала:
 
 Model.signal.time = 10
 Model.signal.amplitude = 1
 Model.signal.dots_per_osc = 50
-Model.signal.frequency = 0.5
+Model.signal.frequency = 5
 Model.signal.phase = 0
 
-Modem.number = 2
-Modem.unit_time = 1/Model.signal.frequency
+#------------------------------------------------------------------------------
+# Ввод параметров модулятора:
 
-#Modem.PM()
-#Modem.APM()
-Modem.FM()
-Model.signal.Plot()
-#Model.signal.Simple()
+Modem.number = 4
+Modem.code_type = "full_mix"
 
-# Обертка канала связи
-NKP.change_parameters(input_signal = Model.signal, 
-      				  type_of_line = 'gauss', dispersion = 1, mu = 0)
-Model.signal.value = NKP.output
+#Modem.unit_time = 20/Modem.signal.frequency
 
-# Просто дебаг информация
-NKP.print_input()
-print("\n\n")
-NKP.print_output()
+#------------------------------------------------------------------------------
+# Расчет:
+
+Modem.PM()
+Modem.signal.Plot()
+
