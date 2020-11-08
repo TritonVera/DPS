@@ -39,8 +39,6 @@ class Signal():
       self.dots_per_osc = 50                    # Количество точек на колебание
       
 # Сигнал:
-      self.value_i = []                         # Значение сигнала
-      self.value_q = []                         # Значение сигнала
       self.value = []                           # Значение сигнала
       self.argument = []                        # Аргумент сигнала
 
@@ -64,8 +62,6 @@ class Signal():
 
     self.argument.clear()
     self.value.clear()
-    self.value_i.clear()
-    self.value_q.clear()
 
 #------------------------------------------------------------------------------
 # Расчет количества точек сигнала:
@@ -88,8 +84,6 @@ class Signal():
     Q = q_amp*sin(w * now + self.phase + phase_shift)
     S = I*sin(w0 * now) - Q*cos(w0 * now)
 
-    self.value_i.append(I)
-    self.value_q.append(Q)
     self.value.append(S)
     self.argument.append(now)
     
@@ -128,21 +122,23 @@ class Signal():
     self.Unit(phase_shift = phs)
     
 # =============================================================================
+
 #s1 = Signal()
 #s2 = Signal()
-#s1.Test()
-#s2.Test(1*pi/4)
+#s1.Test()                                                                     # Сигнал без сдвига   
+#s2.Test(1*pi/4)                                                               # Сдвиг на phi  
 #
-#mult = lambda x,y: [x[i]*y[i] for i in range(0, len(x))] 
+#mult = lambda x,y: [x[i]*y[i] for i in range(0, len(x))]                      # Перемножение двух массивов
 #
-#value1 = Convolution(s1.value, s1.value)
-#value2 = Convolution(s1.value, s2.value)
+#value1 = Convolution(s1.value, s1.value)                                      # Свертка с самим собой
+#value2 = Convolution(s1.value, s2.value)                                      # Свертка со сдвинутым
 #
 #a = s1.value.copy()
 #b = s2.value.copy()
 #b.reverse()
 #
-#value3 = np.cumsum([mult(a,b)])
+#value3 = np.cumsum([mult(a,b)])                                               # Кумулятивная сумма 
+#                                                                              # перемноженых сигналов (накпливаемая)
 #
 #argument1 = [i for i in range(0, len(value1))]
 #argument2 = [i for i in range(0, len(value3))]
@@ -153,6 +149,7 @@ class Signal():
 #ax2.plot(argument1, value1)
 #ax2.plot(argument1, value2)
 #ax3.plot(argument2, value3)
+    
 # =============================================================================
 
     

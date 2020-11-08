@@ -30,7 +30,7 @@ Model.signal.phase = 0
 # Ввод параметров модулятора:
 
 Modem.number = 4
-Modem.code_type = "full_mix"
+Modem.code_type = "full"
 
 #Modem.unit_time = 20/Modem.signal.frequency
 
@@ -39,4 +39,7 @@ Modem.code_type = "full_mix"
 
 Modem.PM()
 Modem.signal.Plot()
-
+Processor.Init(Modem)
+# Тут преобразования сигнала до приема
+Processor.Receive()
+Processor.ConvolutionPlot()
