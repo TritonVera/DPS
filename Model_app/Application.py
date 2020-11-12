@@ -12,17 +12,28 @@ from Model import Model
 from Modem import Modem
 from Line import CommLine
 from Controller import Controller
+from Processor import Processor
+
+#------------------------------------------------------------------------------
+# Текстовый режим
+#------------------------------------------------------------------------------
+# Создание объектов Model:
 
 Modem = Modem()
+Processor = Processor()
 
-Modem.signal.time = 256
-Modem.signal.amplitude = 1
-Modem.signal.dots_per_osc = 50
-Modem.signal.frequency = 1
-Modem.signal.phase = 0
+#------------------------------------------------------------------------------
+# Ввод параметров сигнала:
 
-Modem.number = 2
-Modem.unit_time = 2/Modem.signal.frequency
+Model.signal.time = 10
+Model.signal.amplitude = 1
+Model.signal.dots_per_osc = 50
+Model.signal.frequency = 5
+Model.signal.phase = 0
+
+Modem.number = 4
+Modem.code_type = "full"
+# Modem.unit_time = 2/Modem.signal.frequency
 
 NKP = CommLine()
 
@@ -42,8 +53,8 @@ if mode == 1:
 else:
 	#Modem.PM()
 	#Modem.APM()
-	Modem.FM()
-	# Model.signal.Plot()
+	Modem.PM()
+	Model.signal.Plot()
 	#Model.signal.Simple()
 
 	# Обертка канала связи
@@ -51,5 +62,9 @@ else:
       				  	type_of_line = 'gauss', dispersion = 1, mu = 0)
 	Model.signal = NKP.signal
 
+	Processor.Init(Modem)
+	# Тут преобразования сигнала до приема
+	Processor.Receive()
+	Processor.ConvolutionPlot()
 	# Просто дебаг информация
 	print(NKP.get_input())
