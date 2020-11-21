@@ -24,6 +24,7 @@ class CommLine():
         self.__type_of_line = -1
         self.__dispersion = 0
         self.__mu = 0
+        self.__param = 0
 
         # Load setup methods
         self.change_parameters(**kwargs)
@@ -38,7 +39,7 @@ class CommLine():
                 self.__input = np.array(self.signal.data[0, :])
 
             # Switch to choose type of communication line
-            if key == 'type_of_line':
+            elif key == 'type_of_line':
                 if kwargs[key] == 'simple':
                     self.__type_of_line = 0
                 elif kwargs[key] == 'gauss':
@@ -57,6 +58,8 @@ class CommLine():
                 self.__dispersion = kwargs[key]
             elif key == 'mu':
                 self.__mu = kwargs[key]
+            elif key == 'param':
+                self.__param = kwargs[key]
 
         # Link to work methods
         self.__choose_mode()
@@ -65,28 +68,29 @@ class CommLine():
     def __choose_mode(self):
         if self.__type_of_line == 0:
             self.__output = self.__input.copy()
-            print("Simple")
+            # print("Simple")
 
         elif self.__type_of_line == 1:
             self.__output = self.__input + np.random.normal(self.__mu, 
                 self.__dispersion, self.__input.size)
-            print("Gauss")
+            # print("Gauss")
 
         elif self.__type_of_line == 2:
             pass
 
         elif self.__type_of_line == 3:
-            noise = Garmonic(in_i = self.signal.amplitude, 
+            noise = Garmonic(in_i = self.__dispersion, 
                              in_f = self.signal.frequency, 
-                             in_phase = np.deg2rad(self.__dispersion),
+                             in_phase = np.deg2rad(self.__param),
                              in_time = self.signal.data[1, :]).calc()
             self.__output = noise + self.__input
-            print("Garmonic")
+            # print("Garmonic")
 
         elif self.__type_of_line == 4:
-            shift = int(self.__dispersion * self.signal.dots/self.signal.dots_per_osc)
-            self.__output = self.__input + (0.5 * np.roll(self.__input, shift))
-            print("Relei")
+            shift = int(self.__param * self.signal.dots/self.signal.dots_per_osc)
+            self.__output = self.__input + (self.__dispersion * \
+                                            np.roll(self.__input, shift))
+            # print("Relei")
         else:
             return
         self.signal.data = np.delete(np.vstack((self.__output, self.signal.data)), 1, axis = 0)
@@ -109,8 +113,8 @@ class FindStar():
         self.point_to_block = int(self.signal.dots * self.time_to_block/self.signal.time)
         self.time_to_point = self.time_to_block/self.point_to_block
         self.times = np.arange(0, self.time_to_block, self.time_to_point)
-        self.ref = Garmonic(in_i = 1, in_f = self.signal.frequency + devia, in_phase = phase, in_time = self.times).calc() + \
-                (1j * Garmonic(in_i = 1, in_f = self.signal.frequency + devia, in_phase = 0.5 * np.pi + phase, in_time = self.times).calc())
+        self.ref = Garmonic(in_i = 1, in_f = (1 + devia) * self.signal.frequency, in_phase = phase, in_time = self.times).calc() + \
+                (1j * Garmonic(in_i = 1, in_f = (1 + devia) * self.signal.frequency, in_phase = 0.5 * np.pi + phase, in_time = self.times).calc())
 
     def stars(self):
         num_of_blocks = np.int32(np.floor(self.signal.time/self.time_to_block))

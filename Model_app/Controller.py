@@ -1,4 +1,5 @@
 from math import pi
+import numpy as np
 from Line import FindStar
 
 class Controller():
@@ -10,11 +11,14 @@ class Controller():
         self.__line = line
         self.__osc_plot = ui.plot_panel
         self.__star_plot = ui.star_panel
+        self.__conv_plot = ui.conv_panel
         self.__noise_block = ui.nf_panel
+        self.__error_block = ui.devia_panel
         self.__noise = self.__noise_block.noise_factor_spinbox
         self.__choose_m = ui.modul_panel.combobox
         self.__choose_l = ui.line_panel.combobox
         self.__choose_s = ui.error_panel.combobox
+        self.__choose_t = ui.transmitter_panel.combobox
 
     def plot_view(self):
         # Работа модулятора
@@ -24,37 +28,60 @@ class Controller():
         self.proc.Init(self.__modem)
         
         # Работа линии связи
+        self.bit_error = 1
         self.change_line()
         
         # Настройка модуля рассогласования
         devia = 0
         phase = 0
         if self.__choose_s.currentText() == "Расстройка по частоте":
-            devia = 0.1 # TODO Manage from UI
+            devia = self.__error_block.noise_factor_spinbox.value()
         elif self.__choose_s.currentText() == "Фазовая расстройка":
-            phase = pi/6 # TODO Manage from UI
+            phase = np.deg2rad(self.__error_block.noise_factor_spinbox.value())
         
         # Визуализация на осциллографе
-        visible_sym = 5;            # Число отображаемых символов
-        show_signal = self.__line.signal.data[:, 
-                                              0:int(visible_sym * self.__modem.unit_dots)]
-        self.__osc_plot.draw_plot(show_signal)
+        self.visible_sym = 5;            # Число отображаемых символов
+        self.show_signal = self.__line.signal.data[:, 
+                                              0:int(self.visible_sym * self.__modem.unit_dots)]
+        self.__osc_plot.draw_plot(self.show_signal)
         
-        # Коррелятор (Работает толькол с отсчетами сигнала)
-        self.proc.Receive(show_signal[0])
+        if self.__choose_t.currentText() == "Корреляционный приёмник":
+            self.plot_corr(devia, phase)
         
-        # Расчет созвездия для всех символов
-        stars_out = FindStar(self.__line.signal, devia, phase).stars()    
-        self.__star_plot.draw_plot(stars_out)
+        elif self.__choose_t.currentText() == "Созвездия сигнала":
+            # Расчет созвездия для всех символов
+            stars_out = FindStar(self.__line.signal, devia, phase).stars()
+            self.__ui.choose_mode("Созв")
+            self.__star_plot.draw_plot(stars_out)
+        
+        if self.__choose_t.currentText() == "Битовая ошибка":
+            pass
 
+    def plot_corr(self, dev, ph):
+        
+        # Коррелятор (Работает только с отсчетами сигнала)
+        self.__ui.choose_mode("Корр")
+        self.proc.ReceiveV2(self.show_signal[0], dev, ph)
+        
+        if self.__modem.number == 2:
+            signal = np.array([self.show_signal[1],
+                           self.proc.sgn_mul,
+                           self.proc.convolution])
+            self.__conv_plot.DrawPlots(signal, 0)
+        else:
+            signal = np.array([self.show_signal[1],
+                           self.proc.sgn_mul, 
+                           self.proc.convolution,
+                           self.proc.sgn_mul_Q,
+                           self.proc.convolution_Q])
+            self.__conv_plot.DrawPlots(signal, 1)
+        
     def change_modul(self):
         # Начальная настройка модулятора
         self.__modem.signal.phase = 0                                                  # Начальная фаза сигнала
         self.__modem.code_type = "prob"
-        # self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -1.2, 1.2, 0.4)
-        # self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -1.2, 1.2, 0.4)
 
-        # (TODO) For debug
+        # TODO For debug
         # self.__modem.signal.frequency = self.__ui.signal_panel.freq_spinbox.value()    # Частота несущей
         # self.__modem.signal.time = self.__ui.signal_panel.time_spinbox.value()         # Число отсчетов времени на котором генерируется сигнал
         # self.__modem.unit_time = 2/self.__modem.signal.frequency
@@ -78,20 +105,14 @@ class Controller():
             self.__modem.PM()
 
         elif self.__choose_m.currentText() == "8-АФМ":
-            # self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -2.5, 2.5, 0.5)
-            # self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -2.5, 2.5, 0.5)
             self.__modem.number = 8
             self.__modem.APM()
 
         elif self.__choose_m.currentText() == "16-АФМ":
-            # self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -2.5, 2.5, 0.5)
-            # self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -2.5, 2.5, 0.5)
             self.__modem.number = 16
             self.__modem.APM()
 
         elif self.__choose_m.currentText() == "16-КАМ":
-            # self.__star_plot.plot.setAxisScale(QwtPlot.xBottom, -4, 4, 1)
-            # self.__star_plot.plot.setAxisScale(QwtPlot.yLeft, -4, 4, 1)
             self.__modem.number = 16
             self.__modem.QAM()
 
@@ -104,23 +125,47 @@ class Controller():
             self.__modem.FM()
 
     def show_param(self):
-
-        self.__noise_block.setVisible(1)
+        self.__noise_block.setEnabled(1)
         if self.__choose_l.currentText() == "Канал без искажений":
-            self.__noise_block.setVisible(0)
+            self.__noise_block.setEnabled(0)
+            self.__noise_block.configure(label = "", value = 0)
         elif self.__choose_l.currentText() == "Гауссовская помеха":
-            self.__noise.setValue(10)
-            self.__noise_block.noise_label.setText("С/Ш (разы)")
+            self.__noise_block.configure(label = "С/Ш (разы)", 
+                                         borders = [0, 100],
+                                         value = 10,
+                                         step = 0.1)
         elif self.__choose_l.currentText() == "Релеевские замирания":
-            self.__noise.setValue(1)
-            self.__noise_block.noise_label.setText("Интервал корреляции")
+            self.__noise_block.configure(label = "Интервал корреляции",
+                                         borders = [0, 32],
+                                         value = 1,
+                                         step = 0.1)
         elif self.__choose_l.currentText() == "Гармоническая помеха":
-            self.__noise.setValue(30)
-            self.__noise_block.noise_label.setText("Сдвиг фаз (град)")
+            self.__noise_block.configure(label = "Сдвиг фаз (град)",
+                                         borders = [-180, 180],
+                                         value = 30,
+                                         step = 10)
+
+    def show_error(self):
+        self.__error_block.setEnabled(1)
+        if self.__choose_s.currentText() == "Когерентный приём":
+            self.__error_block.setEnabled(0)
+            self.__error_block.configure(label = "", value = 0)
+        elif self.__choose_s.currentText() == "Расстройка по частоте":
+            self.__error_block.configure(label = "Коэф. растройки", 
+                                         value = 0.1,
+                                         borders = [-0.9, 5],
+                                         step = 0.01)
+        elif self.__choose_s.currentText() == "Фазовая расстройка":
+            self.__error_block.configure(label = "Нач. фаза", 
+                                         value = 10,
+                                         borders = [-180, 180],
+                                         step = 10)
+            
 
     def change_line(self):
         # Вычисление дисперсии полезного сигнала
-        dis_input = self.__modem.signal.dispersion()
+        dis_input = 2 * self.__modem.signal.dispersion()    # Мощa (Умножение на 2 - полукостыль для соответствия проге)
+        # dis_input = np.sqrt(self.__modem.signal.dispersion())   # Напруга
 
         # Выбор типа канала связи
         if self.__choose_l.currentText() == "Канал без искажений":
@@ -129,29 +174,32 @@ class Controller():
                 type_of_line = 'simple')
 
         elif self.__choose_l.currentText() == "Гауссовская помеха":
+            self.bit_error = self.__noise.value()
             self.__line.change_parameters(
                 input_signal = self.__modem.signal, 
                 type_of_line = 'gauss', 
-                dispersion = dis_input/self.__noise.value(), 
+                dispersion = dis_input/self.bit_error, 
                 mu = 0)
 
         elif self.__choose_l.currentText() == "Релеевские замирания":
             self.__line.change_parameters(
                 input_signal = self.__modem.signal, 
                 type_of_line = 'relei', 
-                dispersion = dis_input/self.__noise.value(), 
+                dispersion = dis_input/self.bit_error,
+                param = self.__noise.value(),
                 mu = 0)
 
         elif self.__choose_l.currentText() == "Гармоническая помеха":
             self.__line.change_parameters(
                 input_signal = self.__modem.signal,
                 type_of_line = 'garmonic', 
-                dispersion = self.__noise.value(), 
+                dispersion = dis_input/self.bit_error,
+                param = self.__noise.value(),
                 mu = 0)
 
         elif self.__choose_l.currentText() == "Линейные искажения":
             self.__line.change_parameters(
                 input_signal = self.__modem.signal, 
                 type_of_line = 'line_distor', 
-                dispersion = dis_input/self.__noise.value(), 
+                dispersion = dis_input/self.bit_error, 
                 mu = 0)

@@ -24,7 +24,7 @@ Processor = Processor()
 
 #------------------------------------------------------------------------------
 # Ввод параметров сигнала:
-# Закоментировано всё от чего параметры несущего сигнала не зависят
+# TODO Закоментировано всё от чего параметры несущего сигнала не зависят
 
 # Model.signal.time = 10
 # Model.signal.amplitude = 1
@@ -41,31 +41,32 @@ Model.signal.frequency = 1
 NKP = CommLine()
 
 if int(input("1. Графический режим\r\n2. Текстовый режим\n")) == 1:
-	app = QApplication(sys.argv)
-	ui = UI()
+    app = QApplication(sys.argv)
+    ui = UI()
 
-	manage = Controller(ui, Modem, NKP, Processor)
-	ui.button_panel.plot_button.clicked.connect(manage.plot_view)
-	ui.line_panel.combobox.activated.connect(manage.show_param)
+    manage = Controller(ui, Modem, NKP, Processor)
+    ui.button_panel.plot_button.clicked.connect(manage.plot_view)
+    ui.line_panel.combobox.activated.connect(manage.show_param)
+    ui.error_panel.combobox.activated.connect(manage.show_error)
 
-	ui.show()
-	sys.exit(app.exec_())
+    ui.show()
+    sys.exit(app.exec_())
 
 else:
     Modem.number = 4
     Modem.code_type = "full"
     Modem.PM()
     Model.signal.Plot()
-	#Model.signal.Simple()
+    #Model.signal.Simple()
 
-	# Обертка канала связи
+    # Обертка канала связи
     NKP.change_parameters(input_signal = Model.signal, 
-      				  	type_of_line = 'gauss', dispersion = 1, mu = 0)
+                        type_of_line = 'gauss', dispersion = 1, mu = 0)
     Model.signal = NKP.signal
 
     Processor.Init(Modem)
-	# Тут преобразования сигнала до приема
+    # Тут преобразования сигнала до приема
     Processor.Receive()
     Processor.ConvolutionPlot()
-	# Просто дебаг информация
+    # Просто дебаг информация
     print(NKP.get_input())

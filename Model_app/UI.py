@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QSizePolicy, \
                             QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
                             QDoubleSpinBox, QCheckBox, QSpinBox, QComboBox
 from PyQt5.QtCore import Qt, QTimer
-from ExtUI import PlotPanel, StarPanel
+from ExtUI import PlotPanel, StarPanel, ConvPanel
 
 MAX_PIXEL_SIZE = 16777215
 
@@ -65,21 +65,39 @@ class DemoWindow(QMainWindow):
         # self.main_grid.addWidget(self.signal_panel, 1, 0)
 
         self.nf_panel = NFPanel(self.main_widget)
-        self.nf_panel.setVisible(0)
+        self.nf_panel.setEnabled(0)
         self.main_grid.addWidget(self.nf_panel, 1, 2)
+        
+        self.devia_panel = NFPanel(self.main_widget)
+        self.devia_panel.setEnabled(0)
+        self.main_grid.addWidget(self.devia_panel, 1, 3)
 
 
         self.plot_panel = PlotPanel(self.main_widget)
         self.main_grid.addWidget(self.plot_panel, 2, 0, 1, 2)
 
         self.star_panel = StarPanel(self.main_widget)
+        self.star_panel.setVisible(0)
         self.main_grid.addWidget(self.star_panel, 2, 2, 1, 2)
+        
+        self.conv_panel = ConvPanel(self.main_widget)
+        self.conv_panel.setVisible(0)
+        self.main_grid.addWidget(self.conv_panel, 2, 2, 1, 2)
 
         self.button_panel = ButtonPanel(self.main_widget)
         self.main_grid.addWidget(self.button_panel, 3, 0, -1, -1)
 
         self.main_widget.setLayout(self.main_grid)
 
+    def choose_mode(self, mode):
+        if mode == 'Корр':
+            self.star_panel.setVisible(0)
+            self.conv_panel.setVisible(1)
+            self.plot_panel.setMaximumHeight(self.conv_panel.height()/2)
+        elif mode == 'Созв':
+            self.star_panel.setVisible(1)
+            self.conv_panel.setVisible(0)
+            self.plot_panel.setMaximumHeight(self.star_panel.height())
 
     def create_main_widget(self):
         self.main_widget = QWidget()
@@ -126,18 +144,18 @@ class ChangePanel(QWidget):
 class NFPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setMinimumSize(self, 200, 20)
+        QWidget.setFixedHeight(self, 50)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
         inner_grid_layout = QHBoxLayout(self)
         
-        self.noise_label = QLabel("С/Ш (разы)", self)
+        self.noise_label = QLabel("", self)
 
         self.noise_factor_spinbox = QDoubleSpinBox(self)
         self.noise_factor_spinbox.setValue(10.0)
-        self.noise_factor_spinbox.setRange(0, 180)
-        self.noise_factor_spinbox.setSingleStep(0.1)
+        self.noise_factor_spinbox.setRange(0, 100)
+        self.noise_factor_spinbox.setSingleStep(1)
 
         # Pack elememnts
         inner_grid_layout.addWidget(self.noise_label)
@@ -145,7 +163,17 @@ class NFPanel(QWidget):
 
         #Ending packers
         self.setLayout(inner_grid_layout)
-
+        
+    def configure(self, label = None, borders = [], value = None, step = None):
+        if label != None:
+            self.noise_label.setText(label)
+        if borders != []:
+            self.noise_factor_spinbox.setRange(borders[0], borders[1])
+        if value != None:
+            self.noise_factor_spinbox.setValue(value)
+        if step != None:
+            self.noise_factor_spinbox.setSingleStep(step)
+            
 
 class SignalPanel(QWidget):
     def __init__(self, parent = None):

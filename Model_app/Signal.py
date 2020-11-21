@@ -147,7 +147,8 @@ class Garmonic():
             Q = self.__I * np.sin(self.__devia * self.__time + self.__phase)
             return (I * np.sin(self.__w0 * self.__time)) - (Q * np.cos(self.__w0 * self.__time))
         else:
-            return (self.__I * np.sin(self.__w0 * self.__time)) - (self.__Q * np.cos(self.__w0 * self.__time))
+            return (self.__I * np.sin(self.__w0 * self.__time + self.__phase)) - \
+                   (self.__Q * np.cos(self.__w0 * self.__time + self.__phase))
 
     def calc_with_time(self):
         return np.vstack((self.calc(), self.__time))
