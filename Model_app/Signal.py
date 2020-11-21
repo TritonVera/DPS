@@ -41,6 +41,7 @@ class Signal():
 # Сигнал:
       self.value = []                           # Значение сигнала
       self.argument = []                        # Аргумент сигнала
+      self.data = np.zeros((2, 0))
 
 # Текущий момент времени ед.времени:
       self.now = lambda x: x*self.time/self.dots
@@ -53,7 +54,7 @@ class Signal():
   def Init(self):
     
     self.Clear()
-    self.Dots()
+    self.dots = self.dots_num(self.time)
 
 #------------------------------------------------------------------------------
 # Очистка значений и аргументов сигнала:
@@ -62,13 +63,7 @@ class Signal():
 
     self.argument.clear()
     self.value.clear()
-
-#------------------------------------------------------------------------------
-# Расчет количества точек сигнала:
-    
-  def Dots(self):                               
-    
-    self.dots = self.dots_num(self.time)
+    self.data = np.zeros((2, 0))
 
 #------------------------------------------------------------------------------
 # Расчет значения сигнала в точке time:
@@ -86,6 +81,7 @@ class Signal():
 
     self.value.append(S)
     self.argument.append(now)
+    self.data = np.append(self.data, [[S], [now]], axis = 1)
     
     return([S, now])
 
@@ -121,8 +117,14 @@ class Signal():
     self.Init()
     self.Unit(phase_shift = phs)
     
-# =============================================================================
+#=============================================================================
+# Нахождение средней мощности сигнала
+#
 
+  def dispersion(self):
+    return np.sum(self.data[0]**2)/self.data[0].size
+    
+#==============================================================================
 
 
 class Garmonic():

@@ -52,7 +52,7 @@ class DemoWindow(QMainWindow):
                                      "Гауссовская помеха", 
                                      "Линейные искажения", 
                                      "Гармоническая помеха", 
-                                     "Релеевская помеха"])
+                                     "Релеевские замирания"])
         self.main_grid.addWidget(self.line_panel, 0, 2)
 
         self.error_panel = ChangePanel(self.main_widget, "Синхронизация", 
@@ -126,17 +126,17 @@ class ChangePanel(QWidget):
 class NFPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setMinimumSize(self, 200, 70)
+        QWidget.setMinimumSize(self, 200, 20)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
         inner_grid_layout = QHBoxLayout(self)
         
-        self.noise_label = QLabel("Сигнал/шум (разы)", self)
+        self.noise_label = QLabel("С/Ш (разы)", self)
 
         self.noise_factor_spinbox = QDoubleSpinBox(self)
         self.noise_factor_spinbox.setValue(10.0)
-        self.noise_factor_spinbox.setRange(0.1, 100)
+        self.noise_factor_spinbox.setRange(0, 180)
         self.noise_factor_spinbox.setSingleStep(0.1)
 
         # Pack elememnts

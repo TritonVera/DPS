@@ -75,6 +75,9 @@ class StarPanel(QWidget):
 
         self.plot.setAxisScale(QwtPlot.xBottom, -1.2, 1.2, 0.4)
         self.plot.setAxisScale(QwtPlot.yLeft, -1.2, 1.2, 0.4)
+        
+        self.plot.setAxisAutoScale(QwtPlot.xBottom)
+        self.plot.setAxisAutoScale(QwtPlot.yLeft)
 
         self.grid.attach(self.plot)
         grid_color = QColor(196, 196, 196)

@@ -24,26 +24,27 @@ Processor = Processor()
 
 #------------------------------------------------------------------------------
 # Ввод параметров сигнала:
+# Закоментировано всё от чего параметры несущего сигнала не зависят
 
-Model.signal.time = 10
-Model.signal.amplitude = 1
-Model.signal.dots_per_osc = 50
-Model.signal.frequency = 5
-Model.signal.phase = 0
+# Model.signal.time = 10
+# Model.signal.amplitude = 1
+# Model.signal.dots_per_osc = 50
+Model.signal.frequency = 1
+# Model.signal.phase = 0
 
-Modem.number = 4
-Modem.code_type = "full"
+# Модулятор тоже выключил так, как все равно сигнал измениться в любом режиме работы
+# Modem.number = 4
+# Modem.code_type = "full"
+# Предлагаю задать длительность символа константой, и варировать ее от частоты несущей
 # Modem.unit_time = 2/Modem.signal.frequency
 
 NKP = CommLine()
 
-mode = int(input("1. Графический режим\n2. Текстовый режим\n"))
-
-if mode == 1:
+if int(input("1. Графический режим\r\n2. Текстовый режим\n")) == 1:
 	app = QApplication(sys.argv)
 	ui = UI()
 
-	manage = Controller(ui, Modem, NKP)
+	manage = Controller(ui, Modem, NKP, Processor)
 	ui.button_panel.plot_button.clicked.connect(manage.plot_view)
 	ui.line_panel.combobox.activated.connect(manage.show_param)
 
@@ -51,20 +52,20 @@ if mode == 1:
 	sys.exit(app.exec_())
 
 else:
-	#Modem.PM()
-	#Modem.APM()
-	Modem.PM()
-	Model.signal.Plot()
+    Modem.number = 4
+    Modem.code_type = "full"
+    Modem.PM()
+    Model.signal.Plot()
 	#Model.signal.Simple()
 
 	# Обертка канала связи
-	NKP.change_parameters(input_signal = Model.signal, 
+    NKP.change_parameters(input_signal = Model.signal, 
       				  	type_of_line = 'gauss', dispersion = 1, mu = 0)
-	Model.signal = NKP.signal
+    Model.signal = NKP.signal
 
-	Processor.Init(Modem)
+    Processor.Init(Modem)
 	# Тут преобразования сигнала до приема
-	Processor.Receive()
-	Processor.ConvolutionPlot()
+    Processor.Receive()
+    Processor.ConvolutionPlot()
 	# Просто дебаг информация
-	print(NKP.get_input())
+    print(NKP.get_input())

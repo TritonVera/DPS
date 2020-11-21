@@ -34,20 +34,29 @@ class Processor(Model):
 # Инициализация:
 # Должна происходить сразу после применения модулятора, т.к в качестве опорного
 # сигнала записывается сигнала с модулятора до искажений..
+
+# (TODO) Предлагаю записывать в опорный только часть сигнала (5 первых отсчетов, 
+# как в старой программе), чтобы выводить корреляцию только для первых 5 символов.
+# Остальные символы будем использовать для созвездия и вероятности ошибки
    
   def Init(self, Modem):
-    
-    self.support_signal = self.signal.value.copy()                             # Записываем опорный сигнал
-    
+      
     self.number = Modem.number
     self.unit_dots = Modem.unit_dots
     
+    self.support_signal = self.signal.value[0:int(5 * self.unit_dots)]
+    # self.support_signal = self.signal.value.copy()                             # Записываем опорный сигнал
+
 #------------------------------------------------------------------------------  
 # Прием:
     
-  def Receive(self):
+  def Receive(self, sign = None):
     
-    self.raw_signal = self.signal.value.copy()    
+    # (TODO) Блок проверки наличия входных парметров, так как линия не наследуется
+    if sign == None:
+      self.raw_signal = self.signal.value.copy()
+    else:
+      self.raw_signal = sign
  
     for i in range(0, self.number):                                            # Цикл по символам
       n = self.unit_dots

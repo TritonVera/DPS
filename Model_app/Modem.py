@@ -20,7 +20,7 @@ Created on Fri Sep 18 16:11:01 2020
 import random
 from Model import Model
 from Signal import Garmonic
-from math import pi, log2, ceil, floor
+from math import pi, log2, ceil
 import numpy as np
 
 ###############################################################################
@@ -28,15 +28,17 @@ class Modem(Model):
   
   def __init__(self):
 
-# Параметры модулятора:   
+# Параметры модулятора:
+    self.sym_number = 100                   # Число анализируемых символов
     self.number = 0                         # Размерность созвездия
     self.unit_time = 0                      # Длительность символа в сигнале
     self.unit_dots = 0                      # Количество точек на символ
     self.mod_code = []                      # Модуляционная последовательность
-    self.code_type = "full"                 # Тип последовательности:
+    self.code_type = "prop"                 # Тип последовательности:
                                             # "full" в размер созвездия
-                                            # "prob" случайная, количество:
-                                            # время сигнала/время символа
+                                            # "prob" случайная, количество
+                                            # задается sym_number
+                                            # """время сигнала/время символа"""
                                             
 #------------------------------------------------------------------------------
 # Формирование мод.последовательности в размер созвездия (кодировщик1):
@@ -47,7 +49,11 @@ class Modem(Model):
     
     self.mod_code.clear()
     unit_number = int(log2(self.number))
-    self.unit_time = self.signal.time/self.number                              # Определение времени символа в зависимости
+    
+    # (TODO) Предлагаю рассчитывать длительность всего сигнала, а не длительность 
+    # одного символа
+    self.signal.time = self.unit_time * self.number
+    # self.unit_time = self.signal.time/self.number                            # Определение времени символа в зависимости
                                                                                # от их количества и времени всего сигнала.
     array = [i for i in range(0, self.number)]                                 # Массив символов.
     if self.code_type == "full_mix":                                           # Перемешивание массива по требованию.
@@ -73,6 +79,9 @@ class Modem(Model):
     
     self.mod_code.clear()
     number = int(log2(self.number))
+    
+    # Аналогично предыдущему пункту
+    self.signal.time = self.unit_time * self.sym_number
     
     for i in range(0,int(self.signal.time/self.unit_time)):
       unit = []
@@ -112,13 +121,15 @@ class Modem(Model):
 # Инициализация сигнала и расчет мод.последовательности.
   
   def Init(self):
-    
-    self.signal.Init()
 
+    # (TODO) Расчет длительности символа
+    self.unit_time = 2/self.signal.frequency
     if self.code_type == "full" or self.code_type == "full_mix":
       self.Code1()
     if self.code_type == "prob":
       self.Code2()
+     
+    self.signal.Init()
       
     self.CodePrint()
     
@@ -178,7 +189,7 @@ class Modem(Model):
 # Квадратурный сигнал
   def QAM(self):                      
     
-    self.init()
+    self.Init()
 
     self.signal.modul = '16QAM'
 
