@@ -53,6 +53,7 @@ class Controller():
             stars_out = FindStar(self.__line.signal, devia, phase).stars()
             self.__ui.choose_mode("Созв")
             self.__star_plot.draw_plot(stars_out)
+            self.__star_plot.add_demodul(self.__choose_m.currentText())
         
         if self.__choose_t.currentText() == "Битовая ошибка":
             pass

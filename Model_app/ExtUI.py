@@ -84,34 +84,31 @@ class StarPanel(QWidget):
 
         self.setLayout(vertical_layout)
       
-    def draw_plot(self, *points):
-        
-        num = 0
-        for graph in points:
-            x_list = graph.real
-            y_list = graph.imag
+    def draw_plot(self, graph = np.zeros((1, 0))):
+
+        x_list = graph.real
+        y_list = graph.imag
             
-            # Самописный движок масштаба
-            ScaleEngine(self.plot, x_list, y_list)
+        # Самописный движок масштаба
+        ScaleEngine(self.plot, x_list, y_list)
 
-            # Цвет и ширина линии
-            y_pen = self.signal.pen()# QPen(QColor(128, 0, 0))
-            y_pen.setWidth(5)
+        # Цвет и ширина линии
+        y_pen = self.signal.pen()
+        y_pen.setWidth(5)
 
-            if num == 1:
-                y_pen = QPen(QColor(0, 128, 0))
-            elif num == 2:
-                y_pen = QPen(QColor(0, 0, 128))
-            elif num == 3:
-                y_pen = QPen(QColor(0, 0, 0))
+        self.signal.setData(x_list, y_list)
+        self.signal.attach(self.plot)    
 
-            self.signal.setData(x_list, y_list)
-            # self.signal.setPen(y_pen)
-            self.signal.attach(self.plot)    
+        self.plot.replot()
+        self.plot.show()
 
-            self.plot.replot()
-            self.plot.show()
-            num = num + 1
+    def add_demodul(self, mod = ""):
+
+        if mod == "2-ФМ":
+            div_1 = QwtPlotCurve()
+            div_1.setStyle(QwtPlotCurve.Sticks)
+            div_1.setData([0, 0], [-10, 10])
+            div_1.attach(self.plot)
 
             
 class ConvPanel(QWidget):
