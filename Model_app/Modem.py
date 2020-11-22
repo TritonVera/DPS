@@ -166,24 +166,26 @@ class Modem(Model):
     
     self.Init()
 
+    amp_inc = 0
+    phs_shift = 0
     for i in range(0, len(self.mod_code)):                                     # Схема аналогична PM.
       
       state = self.State(self.mod_code[i])
-      amp_inc = 1
       
-      if state <= 4:                                                           # Отличие: фазовый круг обнуляется 
-        phase_shift = 2*pi*state/4                                             # через 4 символа, а амлитуда увеличивается
+      if state < 4:
+        amp_inc = 1                                                            # Отличие: фазовый круг обнуляется 
+        phs_shift = 2*pi*state/4                                               # через 4 символа, а амлитуда увеличивается
                                                                                # вдвое.
-      if state > 4 and state < 16:
+      if state >= 4 and state < 16:
         amp_inc  = 2
         if self.number == 8:
-          phase_shift = 2*pi*(state - 4)/4
-        if self.number == 8:
-          phase_shift = 2*pi*(state - 4)/8
-        
+          phs_shift = 2*pi*(state - 4)/4
+        if self.number == 16:
+          phs_shift = 2*pi*(state - 4)/12
+      
       for j in range(0 , self.unit_dots):
         now = self.signal.now(j) + i*self.unit_time
-        self.signal.Point(now, phase_shift, [amp_inc, amp_inc])
+        self.signal.Point(now, phs_shift, [amp_inc, amp_inc])
 
 #------------------------------------------------------------------------------
 # Квадратурный сигнал
@@ -196,14 +198,17 @@ class Modem(Model):
     for i in range(int(self.signal.time/self.unit_time)):
         # print(self.State(self.mod_code[i]))
         bin_i = np.array(self.mod_code[i][0:ceil(len(self.mod_code[i])/2)])
-        bin_q = np.array(self.mod_code[i][ceil(len(self.mod_code[i])/2):len(self.mod_code[i])])
+        bin_q = np.array(self.mod_code[i][ceil(len(self.mod_code[i])/2):len\
+                        (self.mod_code[i])])
 
         times = np.arange(i * self.unit_time, 
                           (i+1) * self.unit_time, 
                           self.unit_time/(2 * self.signal.dots_per_osc))
         calc_block = Garmonic(
-            in_i = 2 * (self.State(bin_i.tolist()) - ((2**bin_i.size) - 1.0)/2), 
-            in_q = 2 * (self.State(bin_q.tolist()) - ((2**bin_q.size) - 1.0)/2), 
+            in_i = 2 * (self.State(bin_i.tolist()) - \
+                       ((2**bin_i.size) - 1.0)/2), 
+            in_q = 2 * (self.State(bin_q.tolist()) - \
+                       ((2**bin_q.size) - 1.0)/2), 
             in_f = self.signal.frequency, 
             in_time = times).calc_with_time()
         self.signal.data = np.hstack((self.signal.data, calc_block))
@@ -239,17 +244,17 @@ class Modem(Model):
   
   def Test(self):
     
-    self.number = 4
-    self.signal.time = 10
+    self.number = 16
+#    self.signal.time = 10
     self.signal.frequency = 1
     
     self.unit_time = self.signal.time/self.number                              #Время символа требуется указывать 
     self.code_type = "full"                                                    #для случайной последовательности
     
 #    self.PM()
-#    self.APM()
+    self.APM()
 #    self.FM()
-    self.MSK()
+#    self.MSK()
     
     self.signal.Plot()
     
