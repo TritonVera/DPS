@@ -29,7 +29,7 @@ class Modem(Model):
   def __init__(self):
 
 # Параметры модулятора:
-    self.sym_number = 5                   # Число анализируемых символов
+    self.sym_number = 150                   # Число анализируемых символов
     self.number = 0                         # Размерность созвездия
     self.unit_time = 0                      # Длительность символа в сигнале
     self.unit_dots = 0                      # Количество точек на символ
@@ -165,6 +165,7 @@ class Modem(Model):
   def APM(self):                      
     
     self.Init()
+    phase_shift = 0;
 
     for i in range(0, len(self.mod_code)):                                     # Схема аналогична PM.
       
