@@ -49,6 +49,9 @@ class Signal():
 # Количество точек времени x:
       self.dots_num = lambda x: int(self.dots_per_osc * x * self.frequency)
 
+# Средняя мощнаость сигнала:
+      self.dispersion = lambda: np.sum(self.data[0]**2)/self.data[0].size
+      
 #------------------------------------------------------------------------------
 # Инициализация:
   def Init(self):
@@ -74,7 +77,7 @@ class Signal():
     w = 2*pi*freq_dev
     i_amp = self.amplitude * amp_inc[0]
     q_amp = self.amplitude * amp_inc[1]
-    
+
     I = i_amp*cos(w * now + self.phase + phase_shift)
     Q = q_amp*sin(w * now + self.phase + phase_shift)
     S = I*sin(w0 * now) - Q*cos(w0 * now)
@@ -103,10 +106,10 @@ class Signal():
     
     fig,(ax1) = pyplot.subplots(1,1, figsize = (10,5))
     ax1.plot(self.argument, self.value)
-     
-#==============================================================================
+
+#------------------------------------------------------------------------------
 # Отладка сигнала:
-#
+
   def Test(self, phs = 0):
     
     self.phase = 0
@@ -116,19 +119,16 @@ class Signal():
     
     self.Init()
     self.Unit(phase_shift = phs)
-    
-#=============================================================================
-# Нахождение средней мощности сигнала
-#
-
-  def dispersion(self):
-    return np.sum(self.data[0]**2)/self.data[0].size
-    
-#==============================================================================
-
+    self.Plot()
+        
+###############################################################################
 
 class Garmonic():
-    def __init__(self, in_i = 0, in_q = None, in_f = 0, in_phase = 0, in_time = 0, in_dev = 0):
+
+#------------------------------------------------------------------------------
+  
+    def __init__(self, in_i = 0, in_q = None, in_f = 0,\
+                 in_phase = 0, in_time = 0, in_dev = 0):
 
         self.__I = in_i
         self.__var = 0
@@ -140,15 +140,22 @@ class Garmonic():
         self.__time = np.array(in_time)
         self.__devia = 2*pi*in_dev
 
+#------------------------------------------------------------------------------
+        
     def calc(self):
 
         if self.__var == 0:
             I = self.__I * np.cos(self.__devia * self.__time + self.__phase)
             Q = self.__I * np.sin(self.__devia * self.__time + self.__phase)
-            return (I * np.sin(self.__w0 * self.__time)) - (Q * np.cos(self.__w0 * self.__time))
+            return (I * np.sin(self.__w0 * self.__time)) - \
+                   (Q * np.cos(self.__w0 * self.__time))
         else:
-            return (self.__I * np.sin(self.__w0 * self.__time + self.__phase)) - \
-                   (self.__Q * np.cos(self.__w0 * self.__time + self.__phase))
+            return (self.__I * np.sin(self.__w0 * self.__time + self.__phase))\
+                 - (self.__Q * np.cos(self.__w0 * self.__time + self.__phase))
 
+#------------------------------------------------------------------------------
+                 
     def calc_with_time(self):
         return np.vstack((self.calc(), self.__time))
+
+#==============================================================================

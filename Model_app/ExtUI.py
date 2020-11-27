@@ -158,8 +158,14 @@ class ConvPanel(QWidget):
         q_pen = QPen(QColor(0, 128, 0))
         q_pen.setWidth(2)
         
-        self.plot_sqrt.detachItems()
-        self.plot_conv.detachItems()
+        self.line_sqrt_I.detach()
+        self.line_sqrt_Q.detach()
+        self.line_conv_I.detach()
+        self.line_conv_Q.detach()
+        self.sgn_conv_I.detach()
+        self.sgn_conv_Q.detach()
+        self.sgn_sqrt_I.detach()
+        self.sgn_sqrt_Q.detach()
         
         if mode == 1:
             sqrt_I_offset = np.max(np.abs(points[1])) + 1
