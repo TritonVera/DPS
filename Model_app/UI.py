@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import QMainWindow, QGridLayout, QSizePolicy, \
                             QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
                             QDoubleSpinBox, QCheckBox, QSpinBox, QComboBox
 from PyQt5.QtCore import Qt, QTimer
-from ExtUI import PlotPanel, StarPanel, ConvPanel
+from PyQt5.QtGui import QPalette
+from ExtUI import PlotPanel, StarPanel, ConvPanel, FftPanel
 
 MAX_PIXEL_SIZE = 16777215
 
@@ -72,20 +73,26 @@ class DemoWindow(QMainWindow):
         self.devia_panel.setEnabled(0)
         self.main_grid.addWidget(self.devia_panel, 1, 3)
 
+        self.show_panel = ShowPanel(self.main_widget)
+        self.main_grid.addWidget(self.show_panel, 1, 0)
 
         self.plot_panel = PlotPanel(self.main_widget)
         self.main_grid.addWidget(self.plot_panel, 2, 0, 1, 2)
 
         self.star_panel = StarPanel(self.main_widget)
         self.star_panel.setVisible(0)
-        self.main_grid.addWidget(self.star_panel, 2, 2, 1, 2)
+        self.main_grid.addWidget(self.star_panel, 2, 2, 2, 2)
         
         self.conv_panel = ConvPanel(self.main_widget)
         self.conv_panel.setVisible(0)
-        self.main_grid.addWidget(self.conv_panel, 2, 2, 1, 2)
+        self.main_grid.addWidget(self.conv_panel, 2, 2, 2, 2)
+
+        self.fft_panel = FftPanel(self.main_widget)
+        self.fft_panel.setVisible(0)
+        self.main_grid.addWidget(self.fft_panel, 3, 0, 1, 2)
 
         self.button_panel = ButtonPanel(self.main_widget)
-        self.main_grid.addWidget(self.button_panel, 3, 0, -1, -1)
+        self.main_grid.addWidget(self.button_panel, 4, 0, -1, -1)
 
         self.main_widget.setLayout(self.main_grid)
 
@@ -93,16 +100,14 @@ class DemoWindow(QMainWindow):
         if mode == 'Корр':
             self.star_panel.setVisible(0)
             self.conv_panel.setVisible(1)
-            self.plot_panel.setMaximumHeight(self.conv_panel.height()/2)
         elif mode == 'Созв':
             self.star_panel.setVisible(1)
             self.conv_panel.setVisible(0)
-            self.plot_panel.setMaximumHeight(self.star_panel.height())
 
     def create_main_widget(self):
         self.main_widget = QWidget()
-        self.main_widget.setMinimumSize(1000, 600)
-        self.main_widget.setGeometry(0, 0, 1000, 640)
+        self.main_widget.setMinimumSize(1000, 800)
+        self.main_widget.setGeometry(0, 0, 1000, 840)
         self.setCentralWidget(self.main_widget)
 
 
@@ -120,7 +125,8 @@ modified versions may be distributed without limitation."""
 class ChangePanel(QWidget):
     def __init__(self, parent = None, name = "", combo_box = []):
         QWidget.__init__(self, parent)
-        QWidget.setMinimumSize(self, 200, 100)
+        QWidget.setMinimumWidth(self, 200)
+        QWidget.setFixedHeight(self, 70)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
@@ -141,10 +147,32 @@ class ChangePanel(QWidget):
         self.setLayout(inner_grid_layout)
 
 
+class ShowPanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        QWidget.setFixedHeight(self, 100)
+
+        # Dich for tests
+        Pal = QPalette(Qt.black)
+        QWidget.setPalette(self, Pal)
+
+        # Configure size policy
+        QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        #Make main layout packer
+        inner_grid_layout = QVBoxLayout(self)
+
+        self.fft = QCheckBox("Преобразование Фурье", self)
+        inner_grid_layout.addWidget(self.fft)
+
+        #Ending packers
+        self.setLayout(inner_grid_layout)
+
+
 class NFPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedHeight(self, 50)
+        QWidget.setFixedHeight(self, 100)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer

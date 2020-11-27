@@ -29,7 +29,7 @@ class Modem(Model):
   def __init__(self):
 
 # Параметры модулятора:
-    self.sym_number = 150                   # Число анализируемых символов
+    self.sym_number = 1                   # Число анализируемых символов
     self.number = 0                         # Размерность созвездия
     self.unit_time = 0                      # Длительность символа в сигнале
     self.unit_dots = 0                      # Количество точек на символ

@@ -1,6 +1,6 @@
 from math import pi
 import numpy as np
-from Line import FindStar
+from Line import FindStar, DecodeStar
 
 class Controller():
 
@@ -55,8 +55,13 @@ class Controller():
             self.__star_plot.draw_plot(stars_out)
             self.__star_plot.add_demodul(self.__choose_m.currentText())
         
-        if self.__choose_t.currentText() == "Битовая ошибка":
-            pass
+        # Построение графика БПФ. Второй аргумент это частота дискретищзации, необходимая для точной синхронизации
+        discret_freq = self.__line.signal.frequency * self.__line.signal.dots_per_osc
+        self.__ui.fft_panel.draw_plot(self.__line.signal.data[0], discret_freq)
+
+        # Попробуем декодировать символы
+        decoder = DecodeStar(stars_out, self.__choose_m.currentText())
+        print(decoder.bits)
 
     def plot_corr(self, dev, ph):
         
@@ -124,6 +129,12 @@ class Controller():
         elif self.__choose_m.currentText() == "ММС":
             self.__modem.number = 2
             self.__modem.FM()
+
+    def show_fft(self):
+        if self.__ui.show_panel.fft.isChecked():
+            self.__ui.fft_panel.setVisible(1)
+        else:
+            self.__ui.fft_panel.setVisible(0)
 
     def show_param(self):
         self.__noise_block.setEnabled(1)

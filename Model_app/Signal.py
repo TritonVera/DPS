@@ -147,11 +147,11 @@ class Garmonic():
         if self.__var == 0:
             I = self.__I * np.cos(self.__devia * self.__time + self.__phase)
             Q = self.__I * np.sin(self.__devia * self.__time + self.__phase)
-            return (I * np.sin(self.__w0 * self.__time)) - \
+            return (I * np.sin(self.__w0 * self.__time)) + \
                    (Q * np.cos(self.__w0 * self.__time))
         else:
             return (self.__I * np.sin(self.__w0 * self.__time + self.__phase))\
-                 - (self.__Q * np.cos(self.__w0 * self.__time + self.__phase))
+                 + (self.__Q * np.cos(self.__w0 * self.__time + self.__phase))
 
 #------------------------------------------------------------------------------
                  

@@ -9,10 +9,12 @@ from qwt import QwtPlot, QwtPlotCurve, QwtPlotGrid, QwtPlotMarker
 class PlotPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
+        QWidget.setMinimumHeight(self, 200)
         vertical_layout = QVBoxLayout()
 
         self.plot = QwtPlot(self)
         self.signal = QwtPlotCurve()
+        self.eng = ScaleEngine(self.plot, coef = 0.25);
         self.draw_plot()
 
         vertical_layout.addWidget(self.plot)
@@ -30,8 +32,9 @@ class PlotPanel(QWidget):
 
         self.signal.setData(x_list, y_list)
         self.signal.setPen(y_pen)
-        # self.title.attach(self.plot)
         self.signal.attach(self.plot)
+
+        self.eng.engine(y = y_list);
 
         self.draw_div(x_list[-1])
 
@@ -60,6 +63,53 @@ class PlotPanel(QWidget):
 
         self.plot.replot()
         self.plot.show()
+
+class FftPanel(QWidget):
+    def __init__(self, parent = None):
+        QWidget.__init__(self, parent)
+        QWidget.setMinimumHeight(self, 200)
+        vertical_layout = QVBoxLayout()
+
+        self.plot = QwtPlot(self)
+        self.signal = QwtPlotCurve()
+        self.plot.enableAxis(QwtPlot.yLeft, 0)
+
+        self.draw_plot()
+
+        vertical_layout.addWidget(self.plot)
+
+        self.setLayout(vertical_layout)
+      
+    def draw_plot(self, graph = np.zeros((1, 0)), freq = 1):
+        if graph.size == 0:
+            return
+        y_list = self.__calc(graph)
+        border = freq/2
+        step = freq/np.size(y_list)
+        x_list = np.arange(-border, border, step)
+            
+        # Самописный движок масштаба
+        ScaleEngine(self.plot, y = y_list)
+
+        # Цвет и ширина линии
+        y_pen = self.signal.pen()
+        y_pen.setWidth(1)
+        if x_list != []:
+            self.signal.setData(x_list, y_list)
+            self.signal.attach(self.plot)
+
+        self.plot.replot()
+        self.plot.show()
+
+    def __calc(self, t):
+        if t.size != 0:
+            y = np.fft.fft(t)
+            fft = np.sqrt(y.real**2 + y.imag**2)
+            fft = np.roll(fft, int(fft.size/2))
+            return fft
+        else:
+            return t
+
 
 class StarPanel(QWidget):
     def __init__(self, parent = None):
@@ -90,7 +140,7 @@ class StarPanel(QWidget):
         y_list = graph.imag
             
         # Самописный движок масштаба
-        ScaleEngine(self.plot, x_list, y_list)
+        ScaleEngine(self.plot, x_list, y_list, borders = [[-1.2, 1.2], [-1.2, 1.2]])
 
         # Цвет и ширина линии
         y_pen = self.signal.pen()
@@ -221,21 +271,59 @@ class ConvPanel(QWidget):
         self.plot_conv.show()
             
 class ScaleEngine():
-    def __init__(self, plot, x = [], y = []):
+    def __init__(self, plot, x = [], y = [], coef = 0.2, borders = None):
+        self.plot = plot;
+        self.max_value_x = 0;
+        self.min_value_x = 0;
+        self.max_value_y = 0;
+        self.min_value_y = 0;
+
+        # Границы меньше которых масштаб быть не может
+        # border - двумерный массив (2 оси на 2 границы)
+        self.set_min_x = 0;
+        self.set_max_x = 0;
+        self.set_min_y = 0;
+        self.set_max_y = 0;
+        if borders != None:
+            self.set_min_x = borders[0][0];
+            self.set_max_x = borders[0][1];
+            self.set_min_y = borders[1][0];
+            self.set_max_y = borders[1][1];
+
+        self.coef = coef;
+        self.engine(x, y);
+
+    def engine(self, x = [], y = []):
         if x != []:
-            min_value_x = np.floor(10 * (np.min(x) - 0.2)) / 10
-            max_value_x = np.ceil(10 * (np.max(x) + 0.2)) / 10
-            step_x = (max_value_x - min_value_x) / 10
-            plot.setAxisScale(QwtPlot.xBottom, 
-                              min_value_x, 
-                              max_value_x, 
+            value_max = np.max(x) + (self.coef*np.max(x))
+            value_min = np.min(x) + (self.coef*np.min(x))
+            self.min_value_x = np.floor(10 * value_min) / 10
+            self.max_value_x = np.ceil(10 * value_max) / 10
+
+            if self.min_value_x > self.set_min_x:
+                self.min_value_x = self.set_min_x
+            if self.max_value_x < self.set_max_x:
+                self.max_value_x = self.set_max_x
+
+            step_x = (self.max_value_x - self.min_value_x) / 10
+            self.plot.setAxisScale(QwtPlot.xBottom, 
+                              self.min_value_x, 
+                              self.max_value_x, 
                               step_x)
         if y != []:
-            min_value_y = np.floor(10 * (np.min(y) - 0.2)) / 10
-            max_value_y = np.ceil(10 * (np.max(y) + 0.2)) / 10
-            step_y = (max_value_y - min_value_y) / 10
-            plot.setAxisScale(QwtPlot.yLeft, 
-                              min_value_y, 
-                              max_value_y, 
+            value_max = np.max(y) + (self.coef*np.max(y))
+            value_min = np.min(y) + (self.coef*np.min(y))
+            self.min_value_y = np.floor(10 * value_min) / 10
+            self.max_value_y = np.ceil(10 * value_max) / 10
+
+            if self.min_value_y > self.set_min_y:
+                self.min_value_y = self.set_min_y
+            if self.max_value_y < self.set_max_y:
+                self.max_value_y = self.set_max_y
+
+            step_y = (self.max_value_y - self.min_value_y) / 10
+            self.plot.setAxisScale(QwtPlot.yLeft, 
+                              self.min_value_y, 
+                              self.max_value_y, 
                               step_y)
 
