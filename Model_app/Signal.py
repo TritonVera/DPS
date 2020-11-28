@@ -50,7 +50,7 @@ class Signal():
       self.dots_num = lambda x: int(self.dots_per_osc * x * self.frequency)
 
 # Средняя мощнаость сигнала:
-      self.dispersion = lambda: np.sum(self.data[0]**2)/self.data[0].size
+      self.dispersion = lambda: np.sqrt(np.sum(self.data[0]**2)/self.data[0].size)
       
 #------------------------------------------------------------------------------
 # Инициализация:

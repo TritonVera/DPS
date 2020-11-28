@@ -126,6 +126,28 @@ class FindStar():
                      (1j*np.trapz(s * self.ref.imag, self.times))
         return coords
 
+
+class Compare():
+
+    def __init__(self, in1 = np.array([]), in2 = np.array([])):
+        if in1.size == 0 or in2.size == 0:
+            print("Неверная инициализация")
+            return 
+        self.points_0 = in1
+        self.points_1 = in2
+        self.errors = 0
+        self.result = 0.0
+        self.compare()
+
+    def compare(self):
+
+        self.errors = np.sum(np.logical_xor(self.points_0, self.points_1))
+        if self.errors == 0:
+            self.result = 10**(-4)
+        else:
+            self.result = float(self.errors)/self.points_1.size
+
+
 class DecodeStar():
 
     def __init__(self, points, modul = ""):
@@ -153,6 +175,7 @@ class DecodeStar():
             self.MPS()
         else:
             return
+        self.bits = np.bool_(self.bits)
 
     def PM2(self):
         for i in range(self.points.size):
@@ -250,17 +273,29 @@ class DecodeStar():
                         self.bits = np.append(self.bits, [0, 0, 0, 1])
                     else:
                         self.bits = np.append(self.bits, [0, 0, 1, 0])
-            else:
-                if self.points[i].real + self.points[i].imag > 0:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [1, 0, 0])
+            else: # TODO Доделать эту дичь
+                if (0.404*self.points[i].real) + self.points[i].imag > 0:
+                    if self.points[i].real - (0.404*self.points[i].imag) > 0:
+                        if -(0.404*self.points[i].real) + self.points[i].imag > 0:
+                            self.bits = np.append(self.bits, [1, 1, 1, 0])
+                        else:
+                            self.bits = np.append(self.bits, [1, 0, 0, 0])
                     else:
-                        self.bits = np.append(self.bits, [1, 1, 1])
+                        if (0.404*self.points[i].imag) + self.points[i].real > 0:
+                            self.bits = np.append(self.bits, [1, 1, 1, 1])
+                        else:
+                            self.bits = np.append(self.bits, [1, 1, 0, 1])
                 else:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [1, 0, 1])
+                    if self.points[i].real - (0.404*self.points[i].imag) > 0:
+                        if (0.404*self.points[i].imag) + self.points[i].real > 0:
+                            self.bits = np.append(self.bits, [1, 0, 0, 1])
+                        else:
+                            self.bits = np.append(self.bits, [1, 0, 1, 0])
                     else:
-                        self.bits = np.append(self.bits, [1, 1, 0])
+                        if -(0.404*self.points[i].real) + self.points[i].imag > 0:
+                            self.bits = np.append(self.bits, [1, 1, 0, 0])
+                        else:
+                            self.bits = np.append(self.bits, [1, 0, 1, 1])
 
     def QAM16(self):
         pass

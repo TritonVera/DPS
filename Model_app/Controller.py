@@ -1,6 +1,6 @@
 from math import pi
 import numpy as np
-from Line import FindStar, DecodeStar
+from Line import FindStar, DecodeStar, Compare
 
 class Controller():
 
@@ -21,6 +21,13 @@ class Controller():
         self.__choose_t = ui.transmitter_panel.combobox
 
     def plot_view(self):
+        if self.__ui.show_panel.ber.isChecked():
+            self.__ui.show_panel.label.setVisible(1)
+            self.__modem.sym_number = 1000
+        else:
+            self.__ui.show_panel.label.setVisible(0)
+            self.__modem.sym_number = 50
+
         # Работа модулятора
         self.change_modul()
         
@@ -56,12 +63,21 @@ class Controller():
             self.__star_plot.add_demodul(self.__choose_m.currentText())
         
         # Построение графика БПФ. Второй аргумент это частота дискретищзации, необходимая для точной синхронизации
-        discret_freq = self.__line.signal.frequency * self.__line.signal.dots_per_osc
-        self.__ui.fft_panel.draw_plot(self.__line.signal.data[0], discret_freq)
+        if self.__ui.show_panel.fft.isChecked():
+            self.__ui.fft_panel.setVisible(1)
+            discret_freq = self.__line.signal.frequency * self.__line.signal.dots_per_osc
+            self.__ui.fft_panel.draw_plot(self.__line.signal.data[0, 0:int(100 * self.__modem.unit_dots)], discret_freq)
+        else:
+            self.__ui.fft_panel.setVisible(0)
 
         # Попробуем декодировать символы
-        decoder = DecodeStar(stars_out, self.__choose_m.currentText())
-        print(decoder.bits)
+        if self.__ui.show_panel.ber.isChecked():
+            decoder = DecodeStar(stars_out, self.__choose_m.currentText())
+            bit_error = Compare(np.ravel(self.__modem.mod_code), decoder.bits)
+
+            self.__ui.show_panel.label.setText("Вероятность ошибки: {:.4}".format(bit_error.result))
+            print(bit_error.errors)
+            print(bit_error.result)
 
     def plot_corr(self, dev, ph):
         
@@ -130,11 +146,11 @@ class Controller():
             self.__modem.number = 2
             self.__modem.FM()
 
-    def show_fft(self):
-        if self.__ui.show_panel.fft.isChecked():
-            self.__ui.fft_panel.setVisible(1)
-        else:
-            self.__ui.fft_panel.setVisible(0)
+    # def show_fft(self):
+    #     if self.__ui.show_panel.fft.isChecked():
+    #         self.__ui.fft_panel.setVisible(1)
+    #     else:
+    #         self.__ui.fft_panel.setVisible(0)
 
     def show_param(self):
         self.__noise_block.setEnabled(1)

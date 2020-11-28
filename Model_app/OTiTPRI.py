@@ -19,7 +19,6 @@ manage = Controller(ui, Modem, NKP, Processor)
 ui.button_panel.plot_button.clicked.connect(manage.plot_view)
 ui.line_panel.combobox.activated.connect(manage.show_param)
 ui.error_panel.combobox.activated.connect(manage.show_error)
-ui.show_panel.fft.toggled.connect(manage.show_fft)
 
 ui.show()
 sys.exit(app.exec_())

@@ -29,7 +29,7 @@ class Modem(Model):
   def __init__(self):
 
 # Параметры модулятора:
-    self.sym_number = 1                   # Число анализируемых символов
+    self.sym_number = 10                   # Число анализируемых символов
     self.number = 0                         # Размерность созвездия
     self.unit_time = 0                      # Длительность символа в сигнале
     self.unit_dots = 0                      # Количество точек на символ
@@ -114,7 +114,7 @@ class Modem(Model):
       self.unit_time = self.signal.time/self.number                            # Время символа выбрано так, чтобы поместилось
       self.Code2()                                                             # self.number символов
    
-    self.CodePrint()
+    # self.CodePrint()
 
 ###############################################################################
 # Инициализация модулятора:
