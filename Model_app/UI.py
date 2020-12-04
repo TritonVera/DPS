@@ -107,7 +107,7 @@ class DemoWindow(QMainWindow):
     def create_main_widget(self):
         self.main_widget = QWidget()
         self.main_widget.setMinimumSize(1000, 800)
-        self.main_widget.setGeometry(0, 0, 1000, 840)
+        self.main_widget.setGeometry(0, 0, 1000, 960)
         self.setCentralWidget(self.main_widget)
 
 
@@ -126,7 +126,7 @@ class ChangePanel(QWidget):
     def __init__(self, parent = None, name = "", combo_box = []):
         QWidget.__init__(self, parent)
         QWidget.setMinimumWidth(self, 200)
-        QWidget.setFixedHeight(self, 70)
+        QWidget.setFixedHeight(self, 120)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
@@ -150,11 +150,7 @@ class ChangePanel(QWidget):
 class ShowPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedHeight(self, 100)
-
-        # Dich for tests
-        Pal = QPalette(Qt.black)
-        QWidget.setPalette(self, Pal)
+        QWidget.setFixedHeight(self, 90)
 
         # Configure size policy
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -179,7 +175,7 @@ class ShowPanel(QWidget):
 class NFPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedHeight(self, 100)
+        QWidget.setFixedHeight(self, 90)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
@@ -213,7 +209,7 @@ class NFPanel(QWidget):
 class SignalPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setMinimumSize(self, 200, 70)
+        QWidget.setMinimumSize(self, 200, 150)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer

@@ -70,13 +70,13 @@ class Controller():
         discret_freq = self.__line.signal.frequency * self.__line.signal.dots_per_osc
         self.__ui.fft_panel.draw_plot(self.__line.signal.data[0, 0:int(100 * self.__modem.unit_dots)], discret_freq)
         # Попробуем декодировать символы
-        # if self.__ui.show_panel.ber.isChecked():
-        #     decoder = DecodeStar(stars_out, self.__choose_m.currentText())
-        #     bit_error = Compare(np.ravel(self.__modem.mod_code), decoder.bits)
+        if self.__ui.show_panel.ber.isChecked():
+            decoder = DecodeStar(stars_out, self.__choose_m.currentText())
+            bit_error = Compare(np.ravel(self.__modem.mod_code), decoder.bits)
 
-        #     self.__ui.show_panel.label.setText("Вероятность ошибки: {:.4}".format(bit_error.result))
-        #     print(bit_error.errors)
-        #     print(bit_error.result)
+            self.__ui.show_panel.label.setText("Вероятность ошибки: {:.4}".format(bit_error.result))
+            print(bit_error.errors)
+            print(bit_error.result)
 
     def plot_corr(self, dev, ph):
         

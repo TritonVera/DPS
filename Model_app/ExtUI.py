@@ -80,13 +80,17 @@ class FftPanel(QWidget):
 
         self.setLayout(vertical_layout)
       
-    def draw_plot(self, graph = np.zeros((1, 0)), freq = 1):
+    def draw_plot(self, graph = np.zeros((1, 0)), freq = 1, freq_show = None):
         if graph.size == 0:
             return
+        if freq_show == None:
+            freq_show = freq
         y_list = self.__calc(graph)
         border = freq/2
         step = freq/np.size(y_list)
-        x_list = np.arange(-border, border, step)
+        if freq_show > border:
+            freq_show = border
+        x_list = np.arange(-freq_show, freq_show, step)
             
         # Самописный движок масштаба
         ScaleEngine(self.plot, y = y_list)
