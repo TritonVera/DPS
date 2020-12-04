@@ -164,6 +164,7 @@ class ShowPanel(QWidget):
 
         self.fft = QCheckBox("Преобразование Фурье", self)
         self.ber = QCheckBox("Кривая ошибки", self)
+        self.ber.setVisible(0)
         self.label = QLabel("", self)
         self.label.setVisible(0)
 
