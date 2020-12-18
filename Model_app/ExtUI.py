@@ -278,8 +278,6 @@ class ConvPanel(QWidget):
         # Движок масштаба
         ScaleEngine(self.plot_sqrt, y = sqrt_1)
         ScaleEngine(self.plot_conv, y = conv_1)
-
-        print(conv_1.size)
          
         self.line_sqrt_1.setData([0, time[-1]], [0, 0])
         self.line_sqrt_1.setPen(self.line_pen)

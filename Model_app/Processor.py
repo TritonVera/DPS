@@ -43,12 +43,13 @@ class Processor(Model):
 # как в старой программе), чтобы выводить корреляцию только для первых 5 символов.
 # Остальные символы будем использовать для созвездия и вероятности ошибки
    
-  def Init(self, Modem):
+  def Init(self, Modem, visual_sym):
       
     self.number = Modem.number
     self.unit_dots = Modem.unit_dots
+    self.vis_symbol = visual_sym
     
-    self.support_signal = self.signal.value[0:int(5 * self.unit_dots)]
+    self.support_signal = self.signal.value[0:int(self.vis_symbol * self.unit_dots)]
     self.time = self.signal.data[1, 0:int(self.unit_dots)]  # TODO
     self.convolution = []
     self.sgn_mul = []
@@ -68,7 +69,7 @@ class Processor(Model):
     else:
       self.raw_signal = sign
  
-    for i in range(0, 5):                                             # Цикл по символам
+    for i in range(0, self.vis_symbol):                                             # Цикл по символам
       n = self.unit_dots
       temp0 = self.support_signal[i * n: (i + 1)*n]                             # Отсчеты одного символа
       temp1 = self.raw_signal[i * n: (i + 1)*n]
@@ -96,7 +97,7 @@ class Processor(Model):
                  in_phase = phase,
                  in_time = self.time).calc()
  
-    for i in range(0, 5):                                                      # Цикл по символам
+    for i in range(0, self.vis_symbol):               # Цикл по символам
       n = self.unit_dots
       # Сигнал напрямую с модема не нужен (в реальных системах мы его вообще не знаем)
       temp1 = self.raw_signal[i * n: (i + 1)*n]
@@ -118,7 +119,7 @@ class Processor(Model):
     
     in1 = self.support_signal[:self.unit_dots]
     in2 = self.convolution
-    argument = self.signal.argument[0:int(5 * self.unit_dots)]
+    argument = self.signal.argument[0:int(self.vis_symbol * self.unit_dots)]
     
     fig,(ax2, ax3) = pyplot.subplots(2,1, figsize = (10,10))
     ax2.plot(argument[:self.unit_dots], in1)

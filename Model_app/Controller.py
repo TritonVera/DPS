@@ -32,13 +32,16 @@ class Controller():
 
     def plot_view(self):
         # Отработка нажатия кнопки Построить
+        # Число отобраджаемых символов
+        symbols = 10
+
         # TODO Настроить вычислитель вероятности ошибки
         if self.__show_block.ber.isChecked():
             self.__show_block.label.setVisible(1)
             self.modem.sym_number = 1000
         else:
             self.__show_block.label.setVisible(0)
-            self.modem.sym_number = 200
+            self.modem.sym_number = 50
 
         # 1. Отработка модулятора
         t_work = time.time()
@@ -48,7 +51,7 @@ class Controller():
         
         # 2. Инициализация приёмника для когерентного приёма
         t_work = time.time()
-        self.proc.Init(self.modem)
+        self.proc.Init(self.modem, symbols)
         t_work = time.time() - t_work
         print("Время приёмника: ", t_work * 1000000, " мкс")
         
@@ -66,7 +69,7 @@ class Controller():
         
         # 5. Визуализация на осциллограмме
         t_work = time.time()
-        self.show_osc()
+        self.show_osc(symbols)
         t_work = time.time() - t_work
         print("Время отображения на графике: ", t_work * 1000000, " мкс")
         
@@ -83,13 +86,16 @@ class Controller():
         print("Время БПФ: ", t_work * 1000000, " мкс")
 
         # Попробуем декодировать символы
+        t_work = time.time()
         if self.__show_block.ber.isChecked():
-            decoder = DecodeStar(stars_out, self.choose_modul.currentText())
+            decoder = DecodeStar(self.stars_out, self.choose_modul.currentText())
             bit_error = Compare(np.ravel(self.modem.mod_code), decoder.bits)
 
             self.__show_block.label.setText("Вероятность ошибки: {:.4}".format(bit_error.result))
             print(bit_error.errors)
             print(bit_error.result)
+        t_work = time.time() - t_work
+        print("Время анализатора ошибок: ", t_work * 1000000, " мкс")
 
     def plot_corr(self):
         # Коррелятор (Работает только с отсчетами сигнала)
@@ -120,15 +126,14 @@ class Controller():
                            self.proc.sgn_mul,
                            self.proc.convolution])
                 self.__conv_plot.DrawPlots(signal, 0)
-                self.__conv_plot.add_demodul(self.choose_modul.currentText())
 
         # Созвездие сигнала (только некогерентный приём)
         elif self.choose_transmitter.currentText() == "Созвездия сигнала":
             self.__star_plot.setVisible(1)
             self.__conv_plot.setVisible(0)
             # Расчет созвездия для всех символов
-            stars_out = FindStar(self.line.signal, self.devia, self.phase).stars()
-            self.__star_plot.draw_plot(stars_out)
+            self.stars_out = FindStar(self.line.signal, self.devia, self.phase).stars()
+            self.__star_plot.draw_plot(self.stars_out)
             self.__star_plot.add_demodul(self.choose_modul.currentText())
 
         # Согласованный фильтр
@@ -184,6 +189,7 @@ class Controller():
             self.modem.FM()
 
         self.__show_block.fft.setEnabled(1)
+        self.__show_block.ber.setEnabled(1)
 
     def show_fft(self):
         if self.__show_block.fft.isChecked():
@@ -307,8 +313,8 @@ class Controller():
         elif self.choose_sync.currentText() == "Фазовая расстройка":
             self.phase = np.deg2rad(self.__error_block.noise_factor_spinbox.value())
 
-    def show_osc(self):
-        self.visible_sym = 10;            # Число отображаемых символов
+    def show_osc(self, visual):
+        self.visible_sym = visual;            # Число отображаемых символов
         self.show_signal = self.line.signal.data[:, 
                                               0:int(self.visible_sym * self.modem.unit_dots)]
         self.__osc_plot.draw_plot(self.show_signal)

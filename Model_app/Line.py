@@ -171,7 +171,7 @@ class DecodeStar():
         elif modul == "16-АФМ":
             self.APM16()
         elif modul == "16-КАМ":
-            self.QAM16()
+            self.APM8()
         elif modul == "ЧМ":
             self.FM()
         elif modul == "ММС":
