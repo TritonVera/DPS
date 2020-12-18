@@ -33,12 +33,12 @@ class Controller():
     def plot_view(self):
         # Отработка нажатия кнопки Построить
         # Число отобраджаемых символов
-        symbols = 10
+        symbols = 5
 
         # TODO Настроить вычислитель вероятности ошибки
         if self.__show_block.ber.isChecked():
             self.__show_block.label.setVisible(1)
-            self.modem.sym_number = 1000
+            self.modem.sym_number = 400
         else:
             self.__show_block.label.setVisible(0)
             self.modem.sym_number = 50
@@ -51,7 +51,7 @@ class Controller():
         
         # 2. Инициализация приёмника для когерентного приёма
         t_work = time.time()
-        self.proc.Init(self.modem, symbols)
+        self.proc.Init(self.modem)
         t_work = time.time() - t_work
         print("Время приёмника: ", t_work * 1000000, " мкс")
         
@@ -75,7 +75,7 @@ class Controller():
         
         # 6. Выбор типа отображения
         t_work = time.time()
-        self.plot_corr()
+        self.plot_corr(symbols)
         t_work = time.time() - t_work
         print("Время построения корреляции: ", t_work * 1000000, " мкс")
         
@@ -87,45 +87,47 @@ class Controller():
 
         # Попробуем декодировать символы
         t_work = time.time()
-        if self.__show_block.ber.isChecked():
+        if self.__show_block.ber.isChecked() and self.__show_block.kog.isChecked():
             decoder = DecodeStar(self.stars_out, self.choose_modul.currentText())
             bit_error = Compare(np.ravel(self.modem.mod_code), decoder.bits)
 
-            self.__show_block.label.setText("Вероятность ошибки: {:.4}".format(bit_error.result))
+            self.__show_block.label.setText("{:.4}".format(bit_error.result))
             print(bit_error.errors)
             print(bit_error.result)
         t_work = time.time() - t_work
         print("Время анализатора ошибок: ", t_work * 1000000, " мкс")
 
-    def plot_corr(self):
+    def plot_corr(self, symbol):
         # Коррелятор (Работает только с отсчетами сигнала)
         if self.choose_transmitter.currentText() == "Корреляционный приёмник":
             self.__star_plot.setVisible(0)
             self.__conv_plot.setVisible(1)
+            symbol = symbol * self.modem.unit_dots
 
             # Некогерентный приём
             if self.__show_block.kog.isChecked():
-                self.proc.ReceiveV2(self.show_signal[0], self.devia, self.phase)
+                self.proc.ReceiveV2(self.line.signal.data[0, :], self.devia, self.phase)
                 if self.modem.number == 2:
-                    signal = np.array([self.show_signal[1],
+                    signal = np.array([self.line.signal.data[1, :],
                            self.proc.sgn_mul,
                            self.proc.convolution])
-                    self.__conv_plot.DrawPlots(signal, 0)
+                    self.__conv_plot.DrawPlots(signal, symbol, 0)
                 else:
-                    signal = np.array([self.show_signal[1],
+                    signal = np.array([self.line.signal.data[1, :],
                            self.proc.sgn_mul, 
                            self.proc.convolution,
                            self.proc.sgn_mul_Q,
                            self.proc.convolution_Q])
-                    self.__conv_plot.DrawPlots(signal, 1)
+                    self.__conv_plot.DrawPlots(signal, symbol, 1)
+                self.stars_out = self.proc.data
             
             # Когерентный приём
             else:
-                self.proc.Receive(self.show_signal[0])# , self.devia, self.phase)
-                signal = np.array([self.show_signal[1],
+                self.proc.Receive(self.line.signal.data[0, :])# , self.devia, self.phase)
+                signal = np.array([self.line.signal.data[1, :],
                            self.proc.sgn_mul,
                            self.proc.convolution])
-                self.__conv_plot.DrawPlots(signal, 0)
+                self.__conv_plot.DrawPlots(signal, symbol, 0)
 
         # Созвездие сигнала (только некогерентный приём)
         elif self.choose_transmitter.currentText() == "Созвездия сигнала":
@@ -189,7 +191,6 @@ class Controller():
             self.modem.FM()
 
         self.__show_block.fft.setEnabled(1)
-        self.__show_block.ber.setEnabled(1)
 
     def show_fft(self):
         if self.__show_block.fft.isChecked():
@@ -213,18 +214,24 @@ class Controller():
 
     def show_kog(self):
         if self.choose_transmitter.currentText() == "Корреляционный приёмник":
-            self.__show_block.kog.setChecked(0)
             self.__show_block.kog.setEnabled(1)
         elif self.choose_transmitter.currentText() == "Созвездия сигнала":
             self.__show_block.kog.setChecked(1)
             self.__show_block.kog.setEnabled(0)
         elif self.choose_transmitter.currentText() == "Согласованный фильтр":
-            self.__show_block.kog.setChecked(0)
             self.__show_block.kog.setEnabled(1)
+    
+    def show_ber(self):
+        if self.__show_block.kog.isChecked():
+            self.__show_block.ber.setEnabled(1)
+        else:
+            self.__show_block.ber.setEnabled(0)
+            self.__show_block.ber.setChecked(0)
 
     def show_param(self):
         self.__noise_block.setEnabled(1)
-        if self.choose_line.currentText() == "Канал без искажений":
+        if self.choose_line.currentText() == "Канал без искажений" or \
+           self.choose_line.currentText() == "Линейные искажения":
             self.__noise_block.setEnabled(0)
             self.__noise_block.configure(label = "", value = 0)
         elif self.choose_line.currentText() == "Гауссовская помеха":

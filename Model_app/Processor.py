@@ -43,18 +43,19 @@ class Processor(Model):
 # как в старой программе), чтобы выводить корреляцию только для первых 5 символов.
 # Остальные символы будем использовать для созвездия и вероятности ошибки
    
-  def Init(self, Modem, visual_sym):
+  def Init(self, Modem):
       
     self.number = Modem.number
     self.unit_dots = Modem.unit_dots
-    self.vis_symbol = visual_sym
+    self.vis_symbol = Modem.sym_number
     
-    self.support_signal = self.signal.value[0:int(self.vis_symbol * self.unit_dots)]
-    self.time = self.signal.data[1, 0:int(self.unit_dots)]  # TODO
+    self.support_signal = self.signal.value
+    self.time = self.signal.data[1, 0:int(self.unit_dots)]  # Для некогерентого приемника
     self.convolution = []
     self.sgn_mul = []
     self.convolution_Q = []
     self.sgn_mul_Q = []
+    self.data = []
     # self.support_signal = self.signal.value.copy()                             # Записываем опорный сигнал
 
 #------------------------------------------------------------------------------  
@@ -96,7 +97,7 @@ class Processor(Model):
     Q = Garmonic(in_q = 1, in_f = (1 + dev) * self.signal.frequency, 
                  in_phase = phase,
                  in_time = self.time).calc()
- 
+    self.data = np.zeros(self.vis_symbol, dtype = np.complex)
     for i in range(0, self.vis_symbol):               # Цикл по символам
       n = self.unit_dots
       # Сигнал напрямую с модема не нужен (в реальных системах мы его вообще не знаем)
@@ -111,6 +112,9 @@ class Processor(Model):
       self.convolution_Q = np.append(self.convolution_Q, np.cumsum(temp_Q))
       self.sgn_mul_Q = np.append(self.sgn_mul_Q, temp_Q)
 
+      # Пиковые значения 
+      self.data[i] = (- self.convolution[-1] + (1j * self.convolution_Q[-1])) /\
+                      self.signal.dots_per_osc
 
 #------------------------------------------------------------------------------
 # Отрисовка результата свертки:
@@ -119,7 +123,7 @@ class Processor(Model):
     
     in1 = self.support_signal[:self.unit_dots]
     in2 = self.convolution
-    argument = self.signal.argument[0:int(self.vis_symbol * self.unit_dots)]
+    argument = self.signal.argument[0:int(5 * self.unit_dots)]
     
     fig,(ax2, ax3) = pyplot.subplots(2,1, figsize = (10,10))
     ax2.plot(argument[:self.unit_dots], in1)

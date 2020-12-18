@@ -170,22 +170,21 @@ class ShowPanel(QWidget):
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
-        inner_grid_layout = QGridLayout(self)
+        inner_grid_layout = QVBoxLayout(self)
 
         self.fft = QCheckBox("Преобразование Фурье", self)
         self.kog = QCheckBox("Некогерентный приём", self)
-        self.ber = QCheckBox("Кривая ошибки", self)
+        self.ber = QCheckBox("Вероятность ошибки", self)
         self.fft.setEnabled(0)
         self.kog.setChecked(1)
         self.kog.setEnabled(0)
-        self.ber.setEnabled(0)
         self.label = QLabel("", self)
         self.label.setVisible(0)
 
-        inner_grid_layout.addWidget(self.kog, 0, 0, 1, 1)
-        inner_grid_layout.addWidget(self.fft, 1, 0, 1, 1)
-        inner_grid_layout.addWidget(self.ber, 2, 0, 1, 1)
-        inner_grid_layout.addWidget(self.label, 2, 1, 1, 1)
+        inner_grid_layout.addWidget(self.kog)
+        inner_grid_layout.addWidget(self.fft)
+        inner_grid_layout.addWidget(self.ber)
+        inner_grid_layout.addWidget(self.label)
 
         #Ending packers
         self.setLayout(inner_grid_layout)

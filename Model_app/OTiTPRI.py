@@ -26,6 +26,7 @@ ui.line_panel.combobox.activated.connect(manage.show_param)
 ui.error_panel.combobox.activated.connect(manage.show_error)
 ui.transmitter_panel.combobox.activated.connect(manage.show_kog)
 ui.show_panel.fft.toggled.connect(manage.show_fft)
+ui.show_panel.kog.toggled.connect(manage.show_ber)
 
 # Показ окна
 ui.show()

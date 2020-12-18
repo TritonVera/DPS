@@ -228,7 +228,10 @@ class ConvPanel(QWidget):
 
         self.setLayout(vertical_layout)
         
-    def DrawPlots(self, points = np.zeros((3, 1)), mode = 0):
+    def DrawPlots(self, points = [], num_of_points = 0, mode = 0):
+        if points == []:
+            return
+
         self.line_pen = QPen(QColor(0, 0, 0))
         self.line_pen.setWidth(1)
 
@@ -238,13 +241,13 @@ class ConvPanel(QWidget):
         self.graph_clear()
 
         if mode == 1:
-            self.two_graph(points)
+            self.two_graph(points[:, 0:num_of_points])
         elif mode == 2:
-            self.three_graph(points)
+            self.three_graph(points[:, 0:num_of_points])
         elif mode == 3:
-            self.four_graph(points)
+            self.four_graph(points[:, 0:num_of_points])
         else:
-            self.one_graph(points)
+            self.one_graph(points[:, 0:num_of_points])
 
         self.plot_sqrt.replot()
         self.plot_conv.replot()
