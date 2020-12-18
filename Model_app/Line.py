@@ -8,6 +8,7 @@
 """
 
 import numpy as np
+import scipy.io as sio
 from Signal import Garmonic
 from copy import deepcopy
 
@@ -76,7 +77,8 @@ class CommLine():
             # print("Gauss")
 
         elif self.__type_of_line == 2:
-            pass
+            filt = sio.loadmat("./Matlab_generator/filt.mat")["Num"][0]        # Коэффиценты КИХ фильтра из Matlabа
+            self.__output = np.convolve(filt, self.__input, 'same')
 
         elif self.__type_of_line == 3:
             noise = Garmonic(in_i = self.__dispersion, 
@@ -93,7 +95,8 @@ class CommLine():
             # print("Relei")
         else:
             return
-        self.signal.data = np.delete(np.vstack((self.__output, self.signal.data)), 1, axis = 0)
+        self.signal.data = np.vstack((self.__output, self.signal.data[1]))
+        # self.signal.data = np.delete(np.vstack((self.__output, self.signal.data)), 1, axis = 0)
 
     # Debug methods
     def get_input(self):

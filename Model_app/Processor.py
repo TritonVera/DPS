@@ -60,23 +60,22 @@ class Processor(Model):
 # Прием: TODO Приемник для ФМ-2 таким образом не срабатывает, я написал по аналогии
 # свою функцию.
     
-  def Receive(self, sign = None):
+  def Receive(self, sign = []):
     
     # TODO Блок проверки наличия входных парметров, так как линия не наследуется
-    if sign == None:
+    if sign == []:
       self.raw_signal = self.signal.value.copy()
     else:
       self.raw_signal = sign
  
-    for i in range(0, self.number):                                            # Цикл по символам
+    for i in range(0, 5):                                             # Цикл по символам
       n = self.unit_dots
-      temp0 = self.support_signal[i * n: (i + 1)*n]                            # Отсчеты одного символа   
+      temp0 = self.support_signal[i * n: (i + 1)*n]                             # Отсчеты одного символа
       temp1 = self.raw_signal[i * n: (i + 1)*n]
-      temp1.reverse()
-      temp = np.cumsum(self.mult(temp0, temp1))                                # Кумулятивная сумма по символу
+      temp = self.mult(temp0, np.flip(temp1))                                   # Кумулятивная сумма по символу
 
-      self.convolution = self.convolution + list(temp)                         # Запись результата накопления сивола
-      self.sgn_mul = self.sgn_mul + self.mult(temp0, temp1)
+      self.convolution = np.append(self.convolution, np.cumsum(temp))        # Запись результата накопления символа
+      self.sgn_mul = np.append(self.sgn_mul, temp)                           # Результат перемножения
     
 #------------------------------------------------------------------------------
 # TODO Моя аналогичная функция приёмника
@@ -88,7 +87,7 @@ class Processor(Model):
       self.raw_signal = self.signal.data[0]
     else:
       self.raw_signal = sgn
-      
+
     # Предлагаю сгенирировать 2 сигнала для I и Q компоненты и их сравнивать с сырым
     I = Garmonic(in_i = 1, in_f = (1 + dev) * self.signal.frequency,
                  in_phase = phase,
@@ -104,13 +103,13 @@ class Processor(Model):
       temp_I = self.mult(I, np.flip(temp1))                                    # Кумулятивная сумма по символу
       temp_Q = self.mult(Q, np.flip(temp1))                                    # Кумулятивная сумма по символу для Q
 
-      self.convolution = self.convolution + list(np.cumsum(temp_I))            # Запись результата накопления сивола
-      self.sgn_mul = self.sgn_mul + temp_I                                     # Результат перемножения
+      self.convolution = np.append(self.convolution, np.cumsum(temp_I))        # Запись результата накопления символа
+      self.sgn_mul = np.append(self.sgn_mul, temp_I)                           # Результат перемножения
       
       # Для Q
-      self.convolution_Q = self.convolution_Q + list(np.cumsum(temp_Q))
-      self.sgn_mul_Q = self.sgn_mul_Q + temp_Q
-      
+      self.convolution_Q = np.append(self.convolution_Q, np.cumsum(temp_Q))
+      self.sgn_mul_Q = np.append(self.sgn_mul_Q, temp_Q)
+
 
 #------------------------------------------------------------------------------
 # Отрисовка результата свертки:

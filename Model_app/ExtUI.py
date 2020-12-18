@@ -81,16 +81,28 @@ class FftPanel(QWidget):
         self.setLayout(vertical_layout)
       
     def draw_plot(self, graph = np.zeros((1, 0)), freq = 1, freq_show = None):
+        # Проверка на наличие входных параметров
         if graph.size == 0:
             return
         if freq_show == None:
             freq_show = freq
+
+        # Расчет БПФ
         y_list = self.__calc(graph)
+
+        # Установка границ отображения и шага дискретизации спектра
         border = freq/2
         step = freq/np.size(y_list)
+
+        # Проверка на ограничение, заданное на входной параметр
         if freq_show > border:
             freq_show = border
+
+        # Удаление лишних точек
+        mid_point = int(border/step)
+        show_point = int(freq_show/step)
         x_list = np.arange(-freq_show, freq_show, step)
+        y_list = y_list[int(np.floor(mid_point - show_point)):int(np.ceil(mid_point + show_point))]
             
         # Самописный движок масштаба
         ScaleEngine(self.plot, y = y_list)
@@ -157,12 +169,21 @@ class StarPanel(QWidget):
         self.plot.show()
 
     def add_demodul(self, mod = ""):
-
         if mod == "2-ФМ":
             div_1 = QwtPlotCurve()
             div_1.setStyle(QwtPlotCurve.Sticks)
             div_1.setData([0, 0], [-10, 10])
             div_1.attach(self.plot)
+        elif mod == "4-ФМ":
+            print("Work")
+            div_1 = QwtPlotCurve()
+            div_2 = QwtPlotCurve()
+            div_1.setStyle(QwtPlotCurve.Sticks)
+            div_2.setStyle(QwtPlotCurve.Sticks)
+            div_1.setData([-10, 10], [-10, 10])
+            div_2.setData([-10, 10], [10, -10])
+            div_1.attach(self.plot)
+            div_2.attach(self.plot)
 
             
 class ConvPanel(QWidget):
@@ -171,23 +192,34 @@ class ConvPanel(QWidget):
         QWidget.setMinimumSize(self, 300, 300)
         vertical_layout = QVBoxLayout()
 
+        # Произведение сигналов
         self.plot_sqrt = QwtPlot(self)
         self.plot_sqrt.enableAxis(QwtPlot.yLeft, 0)
 
-        self.sgn_sqrt_I = QwtPlotCurve()
-        self.sgn_sqrt_Q = QwtPlotCurve()
+        self.sgn_sqrt_1 = QwtPlotCurve()
+        self.sgn_sqrt_2 = QwtPlotCurve()
+        self.sgn_sqrt_3 = QwtPlotCurve()
+        self.sgn_sqrt_4 = QwtPlotCurve()
         
+        # Свертка сигналов
         self.plot_conv = QwtPlot(self)
         self.plot_conv.enableAxis(QwtPlot.yLeft, 0)
         
-        self.sgn_conv_I = QwtPlotCurve()
-        self.sgn_conv_Q = QwtPlotCurve()
+        self.sgn_conv_1 = QwtPlotCurve()
+        self.sgn_conv_2 = QwtPlotCurve()
+        self.sgn_conv_3 = QwtPlotCurve()
+        self.sgn_conv_4 = QwtPlotCurve()
         
         # Начальные оси
-        self.line_sqrt_I = QwtPlotCurve()
-        self.line_sqrt_Q = QwtPlotCurve()
-        self.line_conv_I = QwtPlotCurve()
-        self.line_conv_Q = QwtPlotCurve()
+        self.line_sqrt_1 = QwtPlotCurve()
+        self.line_sqrt_2 = QwtPlotCurve()
+        self.line_sqrt_3 = QwtPlotCurve()
+        self.line_sqrt_4 = QwtPlotCurve()
+
+        self.line_conv_1 = QwtPlotCurve()
+        self.line_conv_2 = QwtPlotCurve()
+        self.line_conv_3 = QwtPlotCurve()
+        self.line_conv_4 = QwtPlotCurve()
         
         self.DrawPlots()
         
@@ -197,82 +229,191 @@ class ConvPanel(QWidget):
         self.setLayout(vertical_layout)
         
     def DrawPlots(self, points = np.zeros((3, 1)), mode = 0):
-        time = points[0]
-        sqrt_I = points[1]
-        conv_I = points[2]
-        sqrt_I_offset = 0
-        conv_I_offset = 0
-        
-        line_pen = QPen(QColor(0, 0, 0))
-        line_pen.setWidth(1)
-        
-        i_pen = QPen(QColor(128, 0, 0))
-        i_pen.setWidth(2)
-        
-        q_pen = QPen(QColor(0, 128, 0))
-        q_pen.setWidth(2)
-        
-        self.line_sqrt_I.detach()
-        self.line_sqrt_Q.detach()
-        self.line_conv_I.detach()
-        self.line_conv_Q.detach()
-        self.sgn_conv_I.detach()
-        self.sgn_conv_Q.detach()
-        self.sgn_sqrt_I.detach()
-        self.sgn_sqrt_Q.detach()
-        
+        self.line_pen = QPen(QColor(0, 0, 0))
+        self.line_pen.setWidth(1)
+
+        self.graph_pen = QPen(QColor(128, 0, 0))
+        self.graph_pen.setWidth(2)
+
+        self.graph_clear()
+
         if mode == 1:
-            sqrt_I_offset = np.max(np.abs(points[1])) + 1
-            conv_I_offset = np.max(np.abs(points[2])) + 1
-            sqrt_I = points[1] + (sqrt_I_offset * np.ones(points[1].size))
-            conv_I = points[2] + (conv_I_offset * np.ones(points[2].size))
-            
-            sqrt_Q_offset = np.max(np.abs(points[3])) + 1
-            conv_Q_offset = np.max(np.abs(points[4])) + 1
-            sqrt_Q = points[3] - (sqrt_Q_offset * np.ones(points[3].size))
-            conv_Q = points[4] - (conv_Q_offset * np.ones(points[4].size))
-            
-            # Движок масштаба
-            ScaleEngine(self.plot_sqrt, y = [np.max(sqrt_I), np.min(sqrt_Q)])
-            ScaleEngine(self.plot_conv, y = [np.max(conv_I), np.min(conv_Q)])
-            
-            self.line_sqrt_Q.setData([0, time[-1]], [-sqrt_Q_offset, -sqrt_Q_offset])
-            self.line_sqrt_Q.setPen(line_pen)
-            self.line_sqrt_Q.attach(self.plot_sqrt)
-            self.sgn_sqrt_Q.setData(time, sqrt_Q)
-            self.sgn_sqrt_Q.setPen(q_pen)
-            self.sgn_sqrt_Q.attach(self.plot_sqrt)    
-
-            self.line_conv_Q.setData([0, time[-1]], [-conv_Q_offset, -conv_Q_offset])
-            self.line_conv_Q.setPen(line_pen)
-            self.line_conv_Q.attach(self.plot_conv)
-            self.sgn_conv_Q.setData(time, conv_Q)
-            self.sgn_conv_Q.setPen(q_pen)
-            self.sgn_conv_Q.attach(self.plot_conv) 
-        else:            
-            # Движок масштаба
-            ScaleEngine(self.plot_sqrt, y = sqrt_I)
-            ScaleEngine(self.plot_conv, y = conv_I)
-         
-        self.line_sqrt_I.setData([0, time[-1]], [sqrt_I_offset, sqrt_I_offset])
-        self.line_sqrt_I.setPen(line_pen)
-        self.line_sqrt_I.attach(self.plot_sqrt)
-        self.sgn_sqrt_I.setData(time, sqrt_I)
-        self.sgn_sqrt_I.setPen(i_pen)
-        self.sgn_sqrt_I.attach(self.plot_sqrt)    
-
-        self.line_conv_I.setData([0, time[-1]], [conv_I_offset, conv_I_offset])
-        self.line_conv_I.setPen(line_pen)
-        self.line_conv_I.attach(self.plot_conv)
-        self.sgn_conv_I.setData(time, conv_I)
-        self.sgn_conv_I.setPen(i_pen)
-        self.sgn_conv_I.attach(self.plot_conv)
+            self.two_graph(points)
+        elif mode == 2:
+            self.three_graph(points)
+        elif mode == 3:
+            self.four_graph(points)
+        else:
+            self.one_graph(points)
 
         self.plot_sqrt.replot()
         self.plot_conv.replot()
         
         self.plot_sqrt.show()
         self.plot_conv.show()
+
+    def graph_clear(self):
+        self.line_sqrt_1.detach()
+        self.line_conv_1.detach()
+        self.sgn_conv_1.detach()
+        self.sgn_sqrt_1.detach()
+        self.line_sqrt_2.detach()
+        self.line_conv_2.detach()
+        self.sgn_conv_2.detach()
+        self.sgn_sqrt_2.detach()
+        self.line_sqrt_3.detach()
+        self.line_conv_3.detach()
+        self.sgn_conv_3.detach()
+        self.sgn_sqrt_3.detach()
+        self.line_sqrt_4.detach()
+        self.line_conv_4.detach()
+        self.sgn_conv_4.detach()
+        self.sgn_sqrt_4.detach()
+
+    def one_graph(self, points):
+        time = points[0]
+        sqrt_1 = points[1]
+        conv_1 = points[2]
+
+        # Движок масштаба
+        ScaleEngine(self.plot_sqrt, y = sqrt_1)
+        ScaleEngine(self.plot_conv, y = conv_1)
+
+        print(conv_1.size)
+         
+        self.line_sqrt_1.setData([0, time[-1]], [0, 0])
+        self.line_sqrt_1.setPen(self.line_pen)
+        self.line_sqrt_1.attach(self.plot_sqrt)
+        self.sgn_sqrt_1.setData(time, sqrt_1)
+        self.sgn_sqrt_1.setPen(self.graph_pen)
+        self.sgn_sqrt_1.attach(self.plot_sqrt)
+
+        self.line_conv_1.setData([0, time[-1]], [0, 0])
+        self.line_conv_1.setPen(self.line_pen)
+        self.line_conv_1.attach(self.plot_conv)
+        self.sgn_conv_1.setData(time, conv_1)
+        self.sgn_conv_1.setPen(self.graph_pen)
+        self.sgn_conv_1.attach(self.plot_conv)
+
+    def two_graph(self, points):
+        time = points[0]
+        sqrt_1 = points[1]
+        conv_1 = points[2]
+        sqrt_2 = points[3]
+        conv_2 = points[4]
+
+        sqrt_1_offset = np.max(np.abs(points[1])) + 1
+        conv_1_offset = np.max(np.abs(points[2])) + 1
+        sqrt_1 = points[1] + (sqrt_1_offset * np.ones(points[1].size))
+        conv_1 = points[2] + (conv_1_offset * np.ones(points[2].size))
+            
+        sqrt_2_offset = -np.max(np.abs(points[3])) - 1
+        conv_2_offset = -np.max(np.abs(points[4])) - 1
+        sqrt_2 = points[3] + (sqrt_2_offset * np.ones(points[3].size))
+        conv_2 = points[4] + (conv_2_offset * np.ones(points[4].size))
+            
+        # Движок масштаба
+        ScaleEngine(self.plot_sqrt, y = [np.max(sqrt_1), np.min(sqrt_2)])
+        ScaleEngine(self.plot_conv, y = [np.max(conv_1), np.min(conv_2)])
+
+        self.line_sqrt_1.setData([0, time[-1]], [sqrt_1_offset, sqrt_1_offset])
+        self.line_sqrt_1.setPen(self.line_pen)
+        self.line_sqrt_1.attach(self.plot_sqrt)
+        self.sgn_sqrt_1.setData(time, sqrt_1)
+        self.sgn_sqrt_1.setPen(self.graph_pen)
+        self.sgn_sqrt_1.attach(self.plot_sqrt)
+
+        self.line_conv_1.setData([0, time[-1]], [conv_1_offset, conv_1_offset])
+        self.line_conv_1.setPen(self.line_pen)
+        self.line_conv_1.attach(self.plot_conv)
+        self.sgn_conv_1.setData(time, conv_1)
+        self.sgn_conv_1.setPen(self.graph_pen)
+        self.sgn_conv_1.attach(self.plot_conv)
+
+        self.line_sqrt_2.setData([0, time[-1]], [sqrt_2_offset, sqrt_2_offset])
+        self.line_sqrt_2.setPen(self.line_pen)
+        self.line_sqrt_2.attach(self.plot_sqrt)
+        self.sgn_sqrt_2.setData(time, sqrt_2)
+        self.sgn_sqrt_2.setPen(self.graph_pen)
+        self.sgn_sqrt_2.attach(self.plot_sqrt)   
+
+        self.line_conv_2.setData([0, time[-1]], [conv_2_offset, conv_2_offset])
+        self.line_conv_2.setPen(self.line_pen)
+        self.line_conv_2.attach(self.plot_conv)
+        self.sgn_conv_2.setData(time, conv_2)
+        self.sgn_conv_2.setPen(self.graph_pen)
+        self.sgn_conv_2.attach(self.plot_conv)        
+        
+    def three_graph(self, points):
+        time = points[0]
+        sqrt_1 = points[1]
+        conv_1 = points[2]
+        sqrt_2 = points[3]
+        conv_2 = points[4]
+        sqrt_3 = points[5]
+        conv_3 = points[6]
+
+        sqrt_1_offset = - np.min(points[1]) + 1 + np.max(points[3])
+        conv_1_offset = - np.min(points[2]) + 1 + np.max(points[4])
+        sqrt_1 = points[1] + (sqrt_1_offset * np.ones(points[1].size))
+        conv_1 = points[2] + (conv_1_offset * np.ones(points[2].size))
+            
+        sqrt_2_offset = 0
+        conv_2_offset = 0
+        sqrt_2 = points[3] + (sqrt_2_offset * np.ones(points[3].size))
+        conv_2 = points[4] + (conv_2_offset * np.ones(points[4].size))
+
+        sqrt_3_offset = - np.max(points[5]) - 1 - np.min(points[3])
+        conv_3_offset = - np.max(points[6]) - 1 - np.min(points[4])
+        sqrt_3 = points[5] + (sqrt_1_offset * np.ones(points[5].size))
+        conv_3 = points[6] + (conv_1_offset * np.ones(points[6].size))
+            
+        # Движок масштаба
+        ScaleEngine(self.plot_sqrt, y = [np.max(sqrt_1), np.min(sqrt_3)])
+        ScaleEngine(self.plot_conv, y = [np.max(conv_1), np.min(conv_3)])
+
+        self.line_sqrt_1.setData([0, time[-1]], [sqrt_1_offset, sqrt_1_offset])
+        self.line_sqrt_1.setPen(self.line_pen)
+        self.line_sqrt_1.attach(self.plot_sqrt)
+        self.sgn_sqrt_1.setData(time, sqrt_1)
+        self.sgn_sqrt_1.setPen(self.graph_pen)
+        self.sgn_sqrt_1.attach(self.plot_sqrt)
+
+        self.line_conv_1.setData([0, time[-1]], [conv_1_offset, conv_1_offset])
+        self.line_conv_1.setPen(self.line_pen)
+        self.line_conv_1.attach(self.plot_conv)
+        self.sgn_conv_1.setData(time, conv_1)
+        self.sgn_conv_1.setPen(self.graph_pen)
+        self.sgn_conv_1.attach(self.plot_conv)
+
+        self.line_sqrt_2.setData([0, time[-1]], [sqrt_2_offset, sqrt_2_offset])
+        self.line_sqrt_2.setPen(self.line_pen)
+        self.line_sqrt_2.attach(self.plot_sqrt)
+        self.sgn_sqrt_2.setData(time, sqrt_2)
+        self.sgn_sqrt_2.setPen(self.graph_pen)
+        self.sgn_sqrt_2.attach(self.plot_sqrt)
+
+        self.line_conv_2.setData([0, time[-1]], [conv_2_offset, conv_2_offset])
+        self.line_conv_2.setPen(self.line_pen)
+        self.line_conv_2.attach(self.plot_conv)
+        self.sgn_conv_2.setData(time, conv_2)
+        self.sgn_conv_2.setPen(self.graph_pen)
+        self.sgn_conv_2.attach(self.plot_conv)
+
+        self.line_sqrt_3.setData([0, time[-1]], [sqrt_3_offset, sqrt_3_offset])
+        self.line_sqrt_3.setPen(self.line_pen)
+        self.line_sqrt_3.attach(self.plot_sqrt)
+        self.sgn_sqrt_3.setData(time, sqrt_3)
+        self.sgn_sqrt_3.setPen(self.graph_pen)
+        self.sgn_sqrt_3.attach(self.plot_sqrt)   
+
+        self.line_conv_3.setData([0, time[-1]], [conv_3_offset, conv_3_offset])
+        self.line_conv_3.setPen(self.line_pen)
+        self.line_conv_3.attach(self.plot_conv)
+        self.sgn_conv_3.setData(time, conv_2)
+        self.sgn_conv_3.setPen(self.graph_pen)
+        self.sgn_conv_3.attach(self.plot_conv)  
+
             
 class ScaleEngine():
     def __init__(self, plot, x = [], y = [], coef = 0.2, borders = None):

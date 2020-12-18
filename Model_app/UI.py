@@ -18,26 +18,38 @@ MAX_PIXEL_SIZE = 16777215
 #Класс главного окна
 class DemoWindow(QMainWindow):
     def __init__(self):
+        # Конструктор
         QMainWindow.__init__(self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Демонстрационная программа")
-        self.timer = QTimer()
-        self.create_ui()
 
-    def create_ui(self):
-        #Create and configure central widget
+        # self.timer = QTimer() # Таймер убран из-за остутсвия необходимости к автогенерации сигнала
+
+        # Настройка главного окна
         self.create_main_widget()
 
-        #Create and configure packer
+        # Настройка визуализации программы
+        self.create_ui()
+
+    def create_main_widget(self):
+        # Создание и настройка основного окна программы
+        self.main_widget = QWidget()
+        self.main_widget.setMinimumSize(1000, 800)
+        self.main_widget.setGeometry(0, 0, 1000, 960)
+        self.setCentralWidget(self.main_widget)
+
+    def create_ui(self):
+        # Создание упаковщика
         self.main_grid = QGridLayout(self.main_widget)
 
-        # Первый ряд выбора
-        # Выьор типа приемника
+        # Блок создания приемника и сигнала (ряд 1)
+        # Выбор типа приемника
         self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
                                     ["Созвездия сигнала",
                                      "Корреляционный приёмник"])
         self.main_grid.addWidget(self.transmitter_panel, 0, 0)
 
+        # Выбор типа модуляции
         self.modul_panel = ChangePanel(self.main_widget, "Тип модуляции", 
                                     ["2-ФМ", 
                                      "4-ФМ", 
@@ -50,6 +62,7 @@ class DemoWindow(QMainWindow):
                                      "ММС"])
         self.main_grid.addWidget(self.modul_panel, 0, 1)
 
+        # Тип канала связи
         self.line_panel = ChangePanel(self.main_widget, "Тип канала связи", 
                                     ["Канал без искажений", 
                                      "Гауссовская помеха", 
@@ -58,64 +71,62 @@ class DemoWindow(QMainWindow):
                                      "Релеевские замирания"])
         self.main_grid.addWidget(self.line_panel, 0, 2)
 
+        # Тип синхронизации
         self.error_panel = ChangePanel(self.main_widget, "Синхронизация", 
-                                    ["Когерентный приём", 
+                                    ["Без расстройки", 
                                      "Расстройка по частоте", 
                                      "Фазовая расстройка"])
         self.main_grid.addWidget(self.error_panel, 0, 3)
 
-        # self.signal_panel = SignalPanel(self.main_widget)
-        # self.main_grid.addWidget(self.signal_panel, 1, 0)
+# self.signal_panel = SignalPanel(self.main_widget)
+# self.main_grid.addWidget(self.signal_panel, 1, 0)
 
+        # Блок настройки (ряд 2)
+        # Настройка показа преобразования Фурье и вероятности ошибки
+        self.show_panel = ShowPanel(self.main_widget)
+        self.main_grid.addWidget(self.show_panel, 1, 0)
+
+        # Настройка канала связи
         self.nf_panel = NFPanel(self.main_widget)
         self.nf_panel.setEnabled(0)
         self.main_grid.addWidget(self.nf_panel, 1, 2)
         
+        # Настройка параметров расстройки
         self.devia_panel = NFPanel(self.main_widget)
         self.devia_panel.setEnabled(0)
         self.main_grid.addWidget(self.devia_panel, 1, 3)
 
-        self.show_panel = ShowPanel(self.main_widget)
-        self.main_grid.addWidget(self.show_panel, 1, 0)
-
+        # Блок графиков (ряд 3-4)
+        # Осциллограмма сигнала
         self.plot_panel = PlotPanel(self.main_widget)
         self.main_grid.addWidget(self.plot_panel, 2, 0, 1, 2)
 
+        # Показ созвездия
         self.star_panel = StarPanel(self.main_widget)
         self.star_panel.setVisible(0)
         self.main_grid.addWidget(self.star_panel, 2, 2, 2, 2)
         
+        # График корреляции
         self.conv_panel = ConvPanel(self.main_widget)
         self.conv_panel.setVisible(0)
         self.main_grid.addWidget(self.conv_panel, 2, 2, 2, 2)
 
+        # Спектрограмма сигнала
         self.fft_panel = FftPanel(self.main_widget)
         self.fft_panel.setVisible(0)
         self.main_grid.addWidget(self.fft_panel, 3, 0, 1, 2)
 
+        # Блок кнопок (ряд 5)
         self.button_panel = ButtonPanel(self.main_widget)
         self.main_grid.addWidget(self.button_panel, 4, 0, -1, -1)
 
+        # Упаковка на главный виджет
         self.main_widget.setLayout(self.main_grid)
 
-    def choose_mode(self, mode):
-        if mode == 'Корр':
-            self.star_panel.setVisible(0)
-            self.conv_panel.setVisible(1)
-        elif mode == 'Созв':
-            self.star_panel.setVisible(1)
-            self.conv_panel.setVisible(0)
-
-    def create_main_widget(self):
-        self.main_widget = QWidget()
-        self.main_widget.setMinimumSize(1000, 800)
-        self.main_widget.setGeometry(0, 0, 1000, 960)
-        self.setCentralWidget(self.main_widget)
-
-
     def about(self):
+        # Пасхалка о создателях проги :)
         QMessageBox.about(self, "About",
-                                    """embedding_in_qt5.py demonstartion
+                                    """Embedding_in_qt5.py demonstartion
 Copyright 2020 Ivan Fomin, 2020 Grigory Galchenkov
 
 This program is a demonstration of excite signal in receiver.
@@ -124,6 +135,7 @@ It may be used and modified with no restriction; raw copies as well as
 modified versions may be distributed without limitation."""
                                 )
 
+# Классы визуальных объектов
 class ChangePanel(QWidget):
     def __init__(self, parent = None, name = "", combo_box = []):
         QWidget.__init__(self, parent)
@@ -152,7 +164,7 @@ class ChangePanel(QWidget):
 class ShowPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedHeight(self, 90)
+        # QWidget.setFixedHeight(self, 90)
 
         # Configure size policy
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -161,14 +173,19 @@ class ShowPanel(QWidget):
         inner_grid_layout = QGridLayout(self)
 
         self.fft = QCheckBox("Преобразование Фурье", self)
+        self.kog = QCheckBox("Некогерентный приём", self)
         self.ber = QCheckBox("Кривая ошибки", self)
-        self.ber.setVisible(0)
+        self.fft.setEnabled(0)
+        self.kog.setChecked(1)
+        self.kog.setEnabled(0)
+        self.ber.setEnabled(0)
         self.label = QLabel("", self)
         self.label.setVisible(0)
 
-        inner_grid_layout.addWidget(self.fft, 0, 0, 1, 1)
-        inner_grid_layout.addWidget(self.ber, 1, 0, 1, 1)
-        inner_grid_layout.addWidget(self.label, 1, 1, 1, 1)
+        inner_grid_layout.addWidget(self.kog, 0, 0, 1, 1)
+        inner_grid_layout.addWidget(self.fft, 1, 0, 1, 1)
+        inner_grid_layout.addWidget(self.ber, 2, 0, 1, 1)
+        inner_grid_layout.addWidget(self.label, 2, 1, 1, 1)
 
         #Ending packers
         self.setLayout(inner_grid_layout)
@@ -177,7 +194,7 @@ class ShowPanel(QWidget):
 class NFPanel(QWidget):
     def __init__(self, parent = None):
         QWidget.__init__(self, parent)
-        QWidget.setFixedHeight(self, 90)
+        # QWidget.setFixedHeight(self, 90)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         #Make main layout packer
@@ -256,11 +273,13 @@ class ButtonPanel(QWidget):
 
         # Create buttons
         # self.exit_button = QPushButton("Выход", button_box)
+        self.about_button = QPushButton("О программе", button_box)
         self.plot_button = QPushButton("Построить", button_box)
 
         # Add to layout
         box_layout.addWidget(self.plot_button)
         # box_layout.addWidget(self.exit_button)
+        box_layout.addWidget(self.about_button)
         button_box.setLayout(box_layout)
 
         # Place main layout
