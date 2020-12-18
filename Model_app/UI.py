@@ -31,6 +31,8 @@ class DemoWindow(QMainWindow):
         #Create and configure packer
         self.main_grid = QGridLayout(self.main_widget)
 
+        # Первый ряд выбора
+        # Выьор типа приемника
         self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
                                     ["Созвездия сигнала",
                                      "Корреляционный приёмник"])
