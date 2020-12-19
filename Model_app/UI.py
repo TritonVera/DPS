@@ -174,12 +174,12 @@ class ShowPanel(QWidget):
 
         self.fft = QCheckBox("Преобразование Фурье", self)
         self.kog = QCheckBox("Некогерентный приём", self)
-        self.ber = QCheckBox("Вероятность ошибки", self)
+        self.ber = QCheckBox("Уточ. вероятность ошибки", self)
         self.fft.setEnabled(0)
         self.kog.setChecked(1)
         self.kog.setEnabled(0)
         self.label = QLabel("", self)
-        self.label.setVisible(0)
+        # self.label.setVisible(0)
 
         inner_grid_layout.addWidget(self.kog)
         inner_grid_layout.addWidget(self.fft)

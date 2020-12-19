@@ -14,7 +14,7 @@ class PlotPanel(QWidget):
 
         self.plot = QwtPlot(self)
         self.signal = QwtPlotCurve()
-        self.eng = ScaleEngine(self.plot, coef = 0.25);
+        self.eng = ScaleEngine(self.plot, coef = 0.4);
         self.draw_plot()
 
         vertical_layout.addWidget(self.plot)
@@ -23,6 +23,7 @@ class PlotPanel(QWidget):
       
     def draw_plot(self, points = np.zeros((2, 1))):
         
+        self.plot.detachItems()
         y_list = points[0, :]
         x_list = points[1, :]
 
@@ -36,33 +37,66 @@ class PlotPanel(QWidget):
 
         self.eng.engine(y = y_list);
 
-        self.draw_div(x_list[-1])
+        self.end = x_list[-1]
 
-    def draw_div(self, end):
+        self.plot.replot()
+        self.plot.show()
+
+    def draw_div(self, sym):
+        # Массивы отображаемых разделителей и символов
         self.markers = []
+        self.symbols_up = []
+        self.symbols_down = []
+
+        # Верхняя надпись
+        up_label = QwtPlotMarker()
+        up_label.setValue(self.end/2, self.eng.max_value_y * (14/15))
+        up_label.setLabel("Переданные символы")
+        up_label.attach(self.plot)
+        
+        # Нижняя надпись
+        down_label = QwtPlotMarker()
+        down_label.setValue(self.end/2, self.eng.min_value_y * (14/15))
+        down_label.setLabel("Принятые символы")
+        down_label.attach(self.plot)
+
         l_color = QColor(16, 16, 16)
         l_pen = QPen(l_color)
         l_pen.setWidth(1)
         l_pen.setStyle(Qt.DashLine)
-        for i in np.arange(np.floor(end/2), dtype = np.int):
+        self.step = self.end/len(sym[:])
+        for i in np.arange(len(sym[:]), dtype = np.int):
             marker = QwtPlotMarker()
             self.markers.append(marker)
-            self.markers[i].setValue((1+i) * 2.0, 0.0 )
-            self.markers[i].setLineStyle(QwtPlotMarker.VLine)
-        # self.first_marker.setLabelAlignment(Qt.AlignRight | Qt.AlignBottom )
-            self.markers[i].setLinePen(l_pen)
 
+            self.markers[i].setValue((1+i) * self.step, 0.0)
+            self.markers[i].setLineStyle(QwtPlotMarker.VLine)
+            self.markers[i].setLinePen(l_pen)
             self.markers[i].attach(self.plot)
 
-        # self.d_marker2 = Qwt.QwtPlotMarker()
-        # self.d_marker2.setLineStyle( Qwt.QwtPlotMarker.HLine )
-        # self.d_marker2.setLabelAlignment( Qt.AlignRight | Qt.AlignBottom )
-        # self.d_marker2.setLinePen( QColor( 200, 150, 0 ), 0, Qt.DashDotLine )
-        # self.d_marker2.setSymbol( Qwt.QwtSymbol( Qwt.QwtSymbol.Diamond,QColor( Qt.yellow ), QColor( Qt.green ), QSize( 8, 8 ) ) )
-        # self.d_marker2.attach( self )
+        self.draw_bit(sym, 0)
+
+    def draw_bit(self, sym, mode):
+        for i in np.arange(len(sym[:]), dtype = np.int):
+            x_pos = ((1+i) * self.step) - (self.step/2)
+            if mode:
+                y_pos = self.eng.min_value_y * (4/5)
+                symbol = QwtPlotMarker()
+                self.symbols_down.append(symbol)
+                self.symbols_down[i].setValue(x_pos, y_pos)
+                self.symbols_down[i].setLabel(" ".join(str(sym[i])))
+                self.symbols_down[i].attach(self.plot)
+            else:
+                y_pos = self.eng.max_value_y * (4/5)
+                symbol = QwtPlotMarker()
+                self.symbols_up.append(symbol)
+                self.symbols_up[i].setValue(x_pos, y_pos)
+                self.symbols_up[i].setLabel(" ".join(str(sym[i])))
+                self.symbols_up[i].attach(self.plot)
 
         self.plot.replot()
         self.plot.show()
+
 
 class FftPanel(QWidget):
     def __init__(self, parent = None):
@@ -101,9 +135,9 @@ class FftPanel(QWidget):
         # Удаление лишних точек
         mid_point = int(border/step)
         show_point = int(freq_show/step)
-        x_list = np.arange(-freq_show, freq_show, step)
         y_list = y_list[int(np.floor(mid_point - show_point)):int(np.ceil(mid_point + show_point))]
-            
+        x_list = np.linspace(-freq_show, freq_show, y_list.size)
+
         # Самописный движок масштаба
         ScaleEngine(self.plot, y = y_list)
 
@@ -150,13 +184,20 @@ class StarPanel(QWidget):
 
         self.setLayout(vertical_layout)
       
-    def draw_plot(self, graph = np.zeros((1, 0))):
+    def draw_plot(self, graph = []):
+        self.plot.detachItems()
+        self.grid.attach(self.plot)
+        if graph == []:
+            return
 
         x_list = graph.real
         y_list = graph.imag
+
+        self.scaled_value = max(max(np.abs(x_list)), max(np.abs(y_list)))
             
         # Самописный движок масштаба
-        ScaleEngine(self.plot, x_list, y_list, borders = [[-1.2, 1.2], [-1.2, 1.2]])
+        self.engine = ScaleEngine(self.plot, [-self.scaled_value, self.scaled_value],
+         [-self.scaled_value, self.scaled_value], borders = [[-1.2, 1.2], [-1.2, 1.2]])
 
         # Цвет и ширина линии
         y_pen = self.signal.pen()
@@ -169,22 +210,116 @@ class StarPanel(QWidget):
         self.plot.show()
 
     def add_demodul(self, mod = ""):
+        marker = []
+        l_color = QColor(64, 16, 64)
+        l_pen = QPen(l_color)
+        l_pen.setWidth(1)
+        l_pen.setStyle(Qt.DashLine)
         if mod == "2-ФМ":
-            div_1 = QwtPlotCurve()
-            div_1.setStyle(QwtPlotCurve.Sticks)
-            div_1.setData([0, 0], [-10, 10])
-            div_1.attach(self.plot)
-        elif mod == "4-ФМ":
-            print("Work")
-            div_1 = QwtPlotCurve()
-            div_2 = QwtPlotCurve()
-            div_1.setStyle(QwtPlotCurve.Sticks)
-            div_2.setStyle(QwtPlotCurve.Sticks)
-            div_1.setData([-10, 10], [-10, 10])
-            div_2.setData([-10, 10], [10, -10])
-            div_1.attach(self.plot)
-            div_2.attach(self.plot)
+            marker_1 = QwtPlotCurve()
 
+            marker_1.setData([0.0, 0.0], 
+                [self.engine.max_value_y, self.engine.min_value_y])
+            marker_1.setPen(l_pen)
+            marker_1.attach(self.plot)
+        elif mod == "4-ФМ":
+            scale = self.engine.max_value_y
+            marker_1 = QwtPlotCurve()
+            marker_2 = QwtPlotCurve()
+
+            marker_1.setData([-scale, scale], 
+                [-scale, scale])
+            marker_1.setPen(l_pen)
+            marker_1.attach(self.plot)
+
+            marker_2.setData([-scale, scale],
+                [scale, -scale])
+            marker_2.setPen(l_pen)
+            marker_2.attach(self.plot)
+        elif mod == "4-ФМ со сдвигом":
+            scale = self.engine.max_value_y
+            marker_1 = QwtPlotCurve()
+            marker_2 = QwtPlotCurve()
+
+            marker_1.setData([-scale, scale], 
+                [0, 0])
+            marker_1.setPen(l_pen)
+            marker_1.attach(self.plot)
+
+            marker_2.setData([0, 0],
+                [scale, -scale])
+            marker_2.setPen(l_pen)
+            marker_2.attach(self.plot)
+        elif mod == "8-ФМ":
+            scale = self.engine.max_value_y
+            scale_2 = scale/np.tan(22.5 * np.pi / 180)             # 22,5 градусов
+            marker_1 = QwtPlotCurve()
+            marker_2 = QwtPlotCurve()
+            marker_3 = QwtPlotCurve()
+            marker_4 = QwtPlotCurve()
+
+            marker_1.setData([-scale_2, scale_2], 
+                [-scale, scale])
+            marker_1.setPen(l_pen)
+            marker_1.attach(self.plot)
+
+            marker_2.setData([-scale, scale], 
+                [-scale_2, scale_2])
+            marker_2.setPen(l_pen)
+            marker_2.attach(self.plot)
+
+            marker_3.setData([scale, -scale], 
+                [-scale_2, scale_2])
+            marker_3.setPen(l_pen)
+            marker_3.attach(self.plot)
+
+            marker_4.setData([scale_2, -scale_2], 
+                [-scale, scale])
+            marker_4.setPen(l_pen)
+            marker_4.attach(self.plot)
+
+        elif mod == "8-АФМ":
+            scale = self.engine.max_value_y
+            for i in range(6):
+                marker.append(QwtPlotCurve())
+
+            marker[0].setData([-scale, scale], 
+                [-scale, scale])
+            marker[1].setData([-scale, scale],
+                [scale, -scale])
+
+            # Создание массива кружочка
+            x = np.linspace(-1.5, 1.5, 100)
+            y = np.sqrt((1.5**2) - (x**2))
+            x = np.append(x, np.flip(x))
+            y = np.append(y, -y)
+            marker[2].setData(x, y)
+
+            for i in range(6):
+                marker[i].setPen(l_pen)
+                marker[i].attach(self.plot)
+
+        elif mod == "16-КАМ":
+            scale = self.engine.max_value_y
+            for i in range(6):
+                marker.append(QwtPlotCurve())
+
+            marker[0].setData([scale, -scale], 
+                [0, 0])
+            marker[1].setData([0, 0],
+                [scale, -scale])
+            marker[2].setData([2, 2],
+                [scale, -scale])
+            marker[3].setData([-2, -2],
+                [scale, -scale])
+            marker[4].setData([scale, -scale], 
+                [2, 2])
+            marker[5].setData([scale, -scale], 
+                [-2, -2])
+
+            for i in range(6):
+                marker[i].setPen(l_pen)
+                marker[i].attach(self.plot)
             
 class ConvPanel(QWidget):
     def __init__(self, parent = None):

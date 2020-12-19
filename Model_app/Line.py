@@ -105,219 +105,24 @@ class CommLine():
     def get_output(self):
         return self.__output
 
-
-class FindStar():
-    
-    def __init__(self, input_signal, devia = 0.0, phase = 0):
-        # Init new input signal and output
-        self.signal = input_signal
-        self.input = np.array(self.signal.data[0, :])
-        self.time_to_block = 2/self.signal.frequency
-        self.point_to_block = int(self.signal.dots * self.time_to_block/self.signal.time)
-        self.time_to_point = self.time_to_block/self.point_to_block
-        self.times = np.arange(0, self.time_to_block, self.time_to_point)
-        self.ref = Garmonic(in_i = 1, in_f = (1 + devia) * self.signal.frequency, in_phase = phase, in_time = self.times).calc() + \
-                (1j * Garmonic(in_q = 1, in_f = (1 + devia) * self.signal.frequency, in_phase = phase, in_time = self.times).calc())
-
-    def stars(self):
-        num_of_blocks = np.int32(np.floor(self.signal.time/self.time_to_block))
-        coords = np.zeros(num_of_blocks, dtype = np.complex)
-
-        for i in np.arange(num_of_blocks):
-            s = self.input[(i * self.point_to_block):((i+1) * self.point_to_block)]
-            coords[i] = np.trapz(s * self.ref.real, self.times) + \
-                     (1j*np.trapz(s * self.ref.imag, self.times))
-        return coords
-
-
+#------------------------------------------------------------------------------
+# Анализатор ошибок
 class Compare():
 
     def __init__(self, in1 = np.array([]), in2 = np.array([])):
-        if in1.size == 0 or in2.size == 0:
-            print("Неверная инициализация")
-            return 
         self.points_0 = in1
         self.points_1 = in2
         self.errors = 0
         self.result = 0.0
+        if in1.size == 0 or in2.size == 0:
+            print("Неверная инициализация")
+            return
         self.compare()
 
     def compare(self):
 
         self.errors = np.sum(np.logical_xor(self.points_0, self.points_1))
-        if self.errors == 0:
-            self.result = 10**(-4)
-        else:
+        if self.errors != 0:
             self.result = float(self.errors)/self.points_1.size
-
-
-class DecodeStar():
-
-    def __init__(self, points, modul = ""):
-        if points.size == 0:
-            return
-        self.points = points
-        self.bits = np.array([])
-        if modul == "2-ФМ":
-            self.PM2()
-        elif modul == "4-ФМ":
-            self.PM4()
-        elif modul == "4-ФМ со сдвигом":
-            self.PM4s()
-        elif modul == "8-ФМ":
-            self.PM8()
-        elif modul == "8-АФМ":
-            self.APM8()
-        elif modul == "16-АФМ":
-            self.APM16()
-        elif modul == "16-КАМ":
-            self.QAM16()
-        elif modul == "ЧМ":
-            self.FM()
-        elif modul == "ММС":
-            self.MPS()
         else:
-            return
-        self.bits = np.bool_(self.bits)
-
-    def PM2(self):
-        for i in range(self.points.size):
-            if self.points[i].real < 0:
-                self.bits = np.append(self.bits, [1])
-            else:
-                self.bits = np.append(self.bits, [0])
-
-    def PM4(self):
-        for i in range(self.points.size):
-            if self.points[i].real + self.points[i].imag > 0:
-                if self.points[i].real - self.points[i].imag > 0:
-                    self.bits = np.append(self.bits, [0, 0])
-                else:
-                    self.bits = np.append(self.bits, [1, 1])
-            else:
-                if self.points[i].real - self.points[i].imag > 0:
-                    self.bits = np.append(self.bits, [0, 1])
-                else:
-                    self.bits = np.append(self.bits, [1, 0])
-
-    def PM4s(self):
-        for i in range(self.points.size):
-            if self.points[i].real > 0:
-                if self.points[i].imag > 0:
-                    self.bits = np.append(self.bits, [1, 1])
-                else:
-                    self.bits = np.append(self.bits, [0, 0])
-            else:
-                if self.points[i].imag > 0:
-                    self.bits = np.append(self.bits, [1, 0])
-                else:
-                    self.bits = np.append(self.bits, [0, 1])
-
-    def PM8(self):
-        for i in range(self.points.size):
-            if (0.404*self.points[i].real) + self.points[i].imag > 0:
-                if self.points[i].real - (0.404*self.points[i].imag) > 0:
-                    if -(0.404*self.points[i].real) + self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [1, 1, 1])
-                    else:
-                        self.bits = np.append(self.bits, [0, 0, 0])
-                else:
-                    if (0.404*self.points[i].imag) + self.points[i].real > 0:
-                        self.bits = np.append(self.bits, [1, 1, 0])
-                    else:
-                        self.bits = np.append(self.bits, [1, 0, 1])
-            else:
-                if self.points[i].real - (0.404*self.points[i].imag) > 0:
-                    if (0.404*self.points[i].imag) + self.points[i].real > 0:
-                        self.bits = np.append(self.bits, [0, 0, 1])
-                    else:
-                        self.bits = np.append(self.bits, [0, 1, 0])
-                else:
-                    if -(0.404*self.points[i].real) + self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [1, 0, 0])
-                    else:
-                        self.bits = np.append(self.bits, [0, 1, 1])
-
-    def APM8(self):
-        for i in range(self.points.size):
-            if np.abs(self.points[i]) < 1.5:
-                if self.points[i].real + self.points[i].imag > 0:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [0, 0, 0])
-                    else:
-                        self.bits = np.append(self.bits, [0, 1, 1])
-                else:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [0, 0, 1])
-                    else:
-                        self.bits = np.append(self.bits, [0, 1, 0])
-            else:
-                if self.points[i].real + self.points[i].imag > 0:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [1, 0, 0])
-                    else:
-                        self.bits = np.append(self.bits, [1, 1, 1])
-                else:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [1, 0, 1])
-                    else:
-                        self.bits = np.append(self.bits, [1, 1, 0])
-
-    def APM16(self):
-        for i in range(self.points.size):
-            if np.abs(self.points[i]) < 1.5:
-                if self.points[i].real + self.points[i].imag > 0:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [0, 0, 0, 0])
-                    else:
-                        self.bits = np.append(self.bits, [0, 0, 1, 1])
-                else:
-                    if self.points[i].real - self.points[i].imag > 0:
-                        self.bits = np.append(self.bits, [0, 0, 0, 1])
-                    else:
-                        self.bits = np.append(self.bits, [0, 0, 1, 0])
-            else: # TODO Доделать эту дичь
-                if (0.404*self.points[i].real) + self.points[i].imag > 0:
-                    if self.points[i].real - (0.404*self.points[i].imag) > 0:
-                        if -(0.404*self.points[i].real) + self.points[i].imag > 0:
-                            self.bits = np.append(self.bits, [1, 1, 1, 0])
-                        else:
-                            self.bits = np.append(self.bits, [1, 0, 0, 0])
-                    else:
-                        if (0.404*self.points[i].imag) + self.points[i].real > 0:
-                            self.bits = np.append(self.bits, [1, 1, 1, 1])
-                        else:
-                            self.bits = np.append(self.bits, [1, 1, 0, 1])
-                else:
-                    if self.points[i].real - (0.404*self.points[i].imag) > 0:
-                        if (0.404*self.points[i].imag) + self.points[i].real > 0:
-                            self.bits = np.append(self.bits, [1, 0, 0, 1])
-                        else:
-                            self.bits = np.append(self.bits, [1, 0, 1, 0])
-                    else:
-                        if -(0.404*self.points[i].real) + self.points[i].imag > 0:
-                            self.bits = np.append(self.bits, [1, 1, 0, 0])
-                        else:
-                            self.bits = np.append(self.bits, [1, 0, 1, 1])
-
-    def QAM16(self):
-        pass
-
-    def FM(self):
-        pass
-
-    def MPS(self):
-        pass
-
-# class BitErrorRatio():
-
-#     def __init__(self, input_array = np.zeros(0, dtype = np.complex)):
-#         self.__points = input_array
-#         self.__error = 0
-
-#     def calc(self):
-#         for point in self.__points:
-#             if (point.real < 4) and (point.real > 2):
-#                 self.__error = np.abs(point.real - 3)
-#                 if (point.imag < 4) and (point.imag > 2):
-#                     self.__error = np.abs(point.real)
+            self.result = 10**(-4)

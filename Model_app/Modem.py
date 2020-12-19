@@ -83,7 +83,7 @@ class Modem(Model):
     # Аналогично предыдущему пункту
     self.signal.time = self.unit_time * self.sym_number
     
-    for i in range(0,int(self.signal.time/self.unit_time)):
+    for i in range(0, self.sym_number):
       unit = []
       for j in range(0, number):
         unit.append(random.randint(0,1))
@@ -123,7 +123,7 @@ class Modem(Model):
   def Init(self):
 
     # (TODO) Расчет длительности символа
-    self.unit_time = 2/self.signal.frequency
+    # self.unit_time = 2/self.signal.frequency
     if self.code_type == "full" or self.code_type == "full_mix":
       self.Code1()
     if self.code_type == "prob":
@@ -196,15 +196,15 @@ class Modem(Model):
 
     self.signal.modul = '16QAM'
 
-    for i in range(int(self.signal.time/self.unit_time)):
+    for i in range(len(self.mod_code)):
         # print(self.State(self.mod_code[i]))
         bin_i = np.array(self.mod_code[i][0:ceil(len(self.mod_code[i])/2)])
         bin_q = np.array(self.mod_code[i][ceil(len(self.mod_code[i])/2):len\
                         (self.mod_code[i])])
 
-        times = np.arange(i * self.unit_time, 
-                          (i+1) * self.unit_time, 
-                          self.unit_time/(2 * self.signal.dots_per_osc))
+        times = np.linspace(i * self.unit_time, 
+                           (i+1) * self.unit_time, 
+                           self.unit_dots, 0)
         calc_block = Garmonic(
             in_i = 2 * (self.State(bin_i.tolist()) - \
                        ((2**bin_i.size) - 1.0)/2), 

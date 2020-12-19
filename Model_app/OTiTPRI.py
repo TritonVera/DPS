@@ -8,14 +8,10 @@ from Line import CommLine
 from Controller import Controller
 from Processor import Processor
 
-Modem = Modem()
-Processor = Processor()
-Model.signal.frequency = 1
-NKP = CommLine()
 app = QApplication(sys.argv)
 ui = UI()
 
-manage = Controller(ui, Modem, NKP, Processor)
+manage = Controller(ui, Modem(), CommLine(), Processor())
 
 # Кнопочки
 ui.button_panel.plot_button.clicked.connect(manage.plot_view)

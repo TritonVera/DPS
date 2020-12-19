@@ -49,7 +49,7 @@ class Processor(Model):
     self.unit_dots = Modem.unit_dots
     self.vis_symbol = Modem.sym_number
     
-    self.support_signal = self.signal.value
+    self.support_signal = self.signal.data[0]
     self.time = self.signal.data[1, 0:int(self.unit_dots)]  # Для некогерентого приемника
     self.convolution = []
     self.sgn_mul = []
@@ -70,14 +70,14 @@ class Processor(Model):
     else:
       self.raw_signal = sign
  
-    for i in range(0, self.vis_symbol):                                             # Цикл по символам
+    for i in range(0, self.vis_symbol):                                         # Цикл по символам
       n = self.unit_dots
       temp0 = self.support_signal[i * n: (i + 1)*n]                             # Отсчеты одного символа
       temp1 = self.raw_signal[i * n: (i + 1)*n]
       temp = self.mult(temp0, np.flip(temp1))                                   # Кумулятивная сумма по символу
 
-      self.convolution = np.append(self.convolution, np.cumsum(temp))        # Запись результата накопления символа
-      self.sgn_mul = np.append(self.sgn_mul, temp)                           # Результат перемножения
+      self.convolution = np.append(self.convolution, np.cumsum(temp))           # Запись результата накопления символа
+      self.sgn_mul = np.append(self.sgn_mul, temp)                              # Результат перемножения
     
 #------------------------------------------------------------------------------
 # TODO Моя аналогичная функция приёмника
@@ -113,8 +113,8 @@ class Processor(Model):
       self.sgn_mul_Q = np.append(self.sgn_mul_Q, temp_Q)
 
       # Пиковые значения 
-      self.data[i] = (- self.convolution[-1] + (1j * self.convolution_Q[-1])) /\
-                      self.signal.dots_per_osc
+      self.data[i] = 2 * (- self.convolution[-1] + (1j * self.convolution_Q[-1])) /\
+                     self.unit_dots
 
 #------------------------------------------------------------------------------
 # Отрисовка результата свертки:
@@ -129,4 +129,49 @@ class Processor(Model):
     ax2.plot(argument[:self.unit_dots], in1)
     ax3.plot(argument, in2)
 
-#==============================================================================
+###############################################################################
+
+# Анализатор созвездия сигнала на основе некогерентного корреляционного приёмника
+class FindStar():
+    
+    def __init__(self, input_signal, osc_per_sym = 2, devia = 0.0, phase = 0):
+        # Init new input signal and output
+        self.signal = input_signal
+        self.input = np.array(self.signal.data[0, :])
+
+        # Расчет времени и числа точек на символ для инициализации опорного сигнала
+        self.time_to_block = osc_per_sym/self.signal.frequency
+        self.point_to_block = self.signal.dots_num(self.time_to_block)
+
+        # Генерация опорного сигнала
+        self.times = np.linspace(0, self.time_to_block, self.point_to_block, 0)
+        self.ref = Garmonic(in_i = 1, 
+                            in_f = (1 + devia) * self.signal.frequency, 
+                            in_phase = phase, 
+                            in_time = self.times).calc() + \
+                (1j * Garmonic(in_q = 1, 
+                               in_f = (1 + devia) * self.signal.frequency, 
+                               in_phase = phase, 
+                               in_time = self.times).calc())
+
+#------------------------------------------------------------------------------
+# Посимвольный квадратурный корреляционный приёмник 
+# Каждый символ синхронизирован с его началом и концом
+
+    def stars(self):
+        # Расчет общего числа символов
+        num_of_blocks = int(self.signal.dots/self.point_to_block)
+
+        # Инициализация комплексного вектора
+        coords = np.zeros(num_of_blocks, dtype = np.complex)
+
+        # Проходимся по каждому символу и интегрируем произведение опорного и 
+        # пришедшего символа
+        for i in np.arange(num_of_blocks):
+            s = self.input[(i * self.point_to_block): \
+                           ((i+1) * self.point_to_block)]
+            coords[i] = 2 * (np.trapz(s * self.ref.real) + \
+                     (1j*np.trapz(s * self.ref.imag))) / self.point_to_block    # Нормирующий костыль, 
+                                                                                # чтобы нормировать энергию 
+                                                                                # на выходе интегратора
+        return coords
