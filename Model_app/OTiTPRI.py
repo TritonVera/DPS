@@ -1,15 +1,14 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication
-from UI import DemoWindow as UI
+from UI import DemoWindow as Ui
 from Modem import Modem
-from Model import Model
 from Line import CommLine
 from Controller import Controller
 from Processor import Processor
 
 app = QApplication(sys.argv)
-ui = UI()
+ui = Ui()
 
 manage = Controller(ui, Modem(), CommLine(), Processor())
 

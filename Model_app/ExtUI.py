@@ -85,6 +85,7 @@ class PlotPanel(QWidget):
                 self.symbols_down.append(symbol)
                 self.symbols_down[i].setValue(x_pos, y_pos)
                 self.symbols_down[i].setLabel(" ".join(str(sym[i])))
+                print(" ".join(str(sym[i])))
                 self.symbols_down[i].attach(self.plot)
             else:
                 y_pos = self.eng.max_value_y * (4/5)
@@ -92,6 +93,7 @@ class PlotPanel(QWidget):
                 self.symbols_up.append(symbol)
                 self.symbols_up[i].setValue(x_pos, y_pos)
                 self.symbols_up[i].setLabel(" ".join(str(sym[i])))
+                print(" ".join(str(sym[i])))
                 self.symbols_up[i].attach(self.plot)
 
         self.plot.replot()

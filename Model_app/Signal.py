@@ -20,7 +20,6 @@ Created on Fri Sep 18 16:08:55 2020
 from math import pi, sin, cos
 import numpy as np
 from matplotlib import pyplot
-from Convolution import Convolution
 
 ###############################################################################
 

@@ -263,4 +263,4 @@ class Controller():
         self.show_signal = self.line.signal.data[:, 
                                               0:int(visual * self.modem.unit_dots)]
         self.__osc_plot.draw_plot(self.show_signal)
-        self.__osc_plot.draw_div(bits[0:visual])
+        self.__osc_plot.draw_div(np.array(bits[0:visual]))

@@ -154,6 +154,16 @@ class Modem(Model):
       
       state = self.State(self.mod_code[i])                                     # Перевод символа в десятичную систему.
       phase_shift = 2*pi*state/self.number                                     # Расчет фазы.
+      
+      # times = np.linspace(i * self.unit_time, 
+      #                      (i+1) * self.unit_time, 
+      #                      self.unit_dots, 0)
+      # calc_block = Garmonic(
+      #       in_i = 1, 
+      #       in_phase = phase_shift,
+      #       in_f = self.signal.frequency, 
+      #       in_time = times).calc_with_time()
+      # self.signal.data = np.hstack((self.signal.data, calc_block))
 
       for j in range(0 , self.unit_dots):                                      # Цикл по точкам символа.
         now = self.signal.now(j) + i*self.unit_time                            
