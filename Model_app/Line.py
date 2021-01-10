@@ -12,7 +12,8 @@ import scipy.io as sio
 from Signal import Garmonic
 from copy import deepcopy
 
-class CommLine():
+
+class CommLine:
 
     def __init__(self, **kwargs):
 
@@ -24,6 +25,7 @@ class CommLine():
         # Communication line noise parameters
         self.__type_of_line = -1
         self.__dispersion = 0
+        self.__power = 0
         self.__mu = 0
         self.__param = 0
 
@@ -41,22 +43,22 @@ class CommLine():
 
             # Switch to choose type of communication line
             elif key == 'type_of_line':
-                if kwargs[key] == 'simple':
+                if kwargs[key] == 'simple' or kwargs[key] == 'gauss':
                     self.__type_of_line = 0
-                elif kwargs[key] == 'gauss':
-                    self.__type_of_line = 1
                 elif kwargs[key] == 'line_distor':
-                    self.__type_of_line = 2
+                    self.__type_of_line = 1
                 elif kwargs[key] == 'garmonic':
-                    self.__type_of_line = 3
+                    self.__type_of_line = 2
                 elif kwargs[key] == 'relei':
-                    self.__type_of_line = 4
+                    self.__type_of_line = 3
                 else:
                     self.__type_of_line = -1
 
             # Change init parameters of noise
             elif key == 'dispersion':
                 self.__dispersion = kwargs[key]
+            elif key == 'impact':
+                self.__power = kwargs[key]
             elif key == 'mu':
                 self.__mu = kwargs[key]
             elif key == 'param':
@@ -69,34 +71,36 @@ class CommLine():
     def __choose_mode(self):
         if self.__type_of_line == 0:
             self.__output = self.__input.copy()
-            # print("Simple")
 
+        # Line distortion
         elif self.__type_of_line == 1:
-            self.__output = self.__input + np.random.normal(self.__mu, 
-                self.__dispersion, self.__input.size)
-            # print("Gauss")
+            filter = sio.loadmat("./Matlab_generator/filt.mat")["Num"][0]  # Коэффиценты КИХ фильтра из Matlabа
+            self.__output = np.convolve(filter, self.__input, 'same')
 
+        # Harmonic distortion
         elif self.__type_of_line == 2:
-            filt = sio.loadmat("./Matlab_generator/filt.mat")["Num"][0]        # Коэффиценты КИХ фильтра из Matlabа
-            self.__output = np.convolve(filt, self.__input, 'same')
-
-        elif self.__type_of_line == 3:
-            noise = Garmonic(in_i = self.__dispersion, 
-                             in_f = self.signal.frequency, 
-                             in_phase = np.deg2rad(self.__param),
-                             in_time = self.signal.data[1, :]).calc()
+            noise = Garmonic(in_i=self.__power,
+                             in_f=self.signal.frequency,
+                             in_phase=np.deg2rad(self.__param),
+                             in_time=self.signal.data[1, :]).calc()
             self.__output = noise + self.__input
-            # print("Garmonic")
 
-        elif self.__type_of_line == 4:
-            shift = int(self.__param * self.signal.dots/self.signal.dots_per_osc)
-            self.__output = self.__input + (self.__dispersion * \
-                                            np.roll(self.__input, shift))
-            # print("Relei")
+        # Relei's fading
+        elif self.__type_of_line == 3:
+            shift = int(self.__param * self.signal.dots / self.signal.dots_per_osc)
+            self.__output = self.__input + (self.__power * np.roll(self.__input, shift))
+        # Another way
         else:
             return
+
+        # Add white Gauss noise
+        self.__add_gauss()
+
+        # Update signal matrix
         self.signal.data = np.vstack((self.__output, self.signal.data[1]))
-        # self.signal.data = np.delete(np.vstack((self.__output, self.signal.data)), 1, axis = 0)
+
+    def __add_gauss(self):
+        self.__output += np.random.normal(self.__mu, self.__dispersion, self.__output.size)
 
     # Debug methods
     def get_input(self):
@@ -105,11 +109,12 @@ class CommLine():
     def get_output(self):
         return self.__output
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # Анализатор ошибок
 class Compare():
 
-    def __init__(self, in1 = np.array([]), in2 = np.array([])):
+    def __init__(self, in1=np.array([]), in2=np.array([])):
         self.points_0 = in1
         self.points_1 = in2
         self.errors = 0
@@ -123,6 +128,6 @@ class Compare():
 
         self.errors = np.sum(np.logical_xor(self.points_0, self.points_1))
         if self.errors != 0:
-            self.result = float(self.errors)/self.points_1.size
+            self.result = float(self.errors) / self.points_1.size
         else:
-            self.result = 10**(-4)
+            self.result = 10 ** (-4)

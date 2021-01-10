@@ -5,8 +5,15 @@ from decisive import NoCogDecisiveDevice
 import time
 from blocks import change_modul, change_line
 
+
 class Controller():
     def __init__(self, ui, modem, line, proc):
+        # Параметры визулизации и настройки сигнала
+        self.symbols = 5  # Число отображаемых символов
+        self.osc_per_sym = 2  # Периодов на символ (определяет полосу сигнала)
+        self.freq = 1  # МГц
+        self.sym_number = 50  # Число генерируемых символов
+
         # Модели блоков вычисления (Модем -> Линия связи -> Приёмник)
         self.modem = modem
         self.proc = proc
@@ -28,43 +35,39 @@ class Controller():
         self.choose_line = ui.line_panel.combobox
         self.choose_sync = ui.error_panel.combobox
 
-#------------------------------------------------------------------------------
-# Блок отработки нажатия кнопки
+    # ------------------------------------------------------------------------------
+    # Блок отработки нажатия кнопки
 
     def plot_view(self):
-        # Параметры визулизации и настройки сигнала
-        self.symbols = 5         # Число отображаемых символов
-        self.osc_per_sym = 2     # Периодов на символ (определяет полосу сигнала)
-        self.freq = 1            # МГц
-        sym_number = 50          # Число генерируемых символов
 
         # Определение числа генерируемых символов
         if self.__show_block.ber.isChecked():
             # self.__show_block.label.setVisible(1)
-            sym_number = 1000
-        # else:
-        #     self.__show_block.label.setVisible(0)
+            self.sym_number = 1000
+        else:
+            # self.__show_block.label.setVisible(0)
+            self.sym_number = 50
 
         # 1. Отработка модулятора 
         t_work = time.time()
-        change_modul(self.modem,                        # Сам блок
-                     self.osc_per_sym,                  # Число периодов на символ
-                     self.freq,                         # Частота несущей
-                     sym_number,                        # Число генерируемых символов
-                     self.choose_modul.currentText())   # Тип модуляции
+        change_modul(self.modem,        # Сам блок
+                     self.osc_per_sym,  # Число периодов на символ
+                     self.freq,         # Частота несущей
+                     self.sym_number,   # Число генерируемых символов
+                     self.choose_modul.currentText())  # Тип модуляции
         t_work = time.time() - t_work
         print("Время модулятора: ", t_work * 1000000, " мкс")
-        
+
         # 2. Инициализация приёмника для когерентного приёма
         t_work = time.time()
         self.proc.Init(self.modem)
         t_work = time.time() - t_work
         print("Время приёмника: ", t_work * 1000000, " мкс")
-        
+
         # 3. Отработка линии связи
         t_work = time.time()
         change_line(self.line,
-                    self.modem.signal, 
+                    self.modem.signal,
                     self.choose_line.currentText(),
                     self.__noise.value())
         t_work = time.time() - t_work
@@ -72,7 +75,7 @@ class Controller():
 
         # 4. Визуализация осциллограммы
         t_work = time.time()
-        self.show_osc(self.symbols, 
+        self.show_osc(self.symbols,
                       self.modem.mod_code)
         t_work = time.time() - t_work
         print("Время отображения на графике: ", t_work * 1000000, " мкс")
@@ -82,13 +85,13 @@ class Controller():
         self.config_trans()
         t_work = time.time() - t_work
         print("Время рассогласователя: ", t_work * 1000000, " мкс")
-        
+
         # 6. Выбор типа приема
         t_work = time.time()
         self.change_transmitter()
         t_work = time.time() - t_work
         print("Время построения корреляции: ", t_work * 1000000, " мкс")
-        
+
         # 7. Построение спектра
         t_work = time.time()
         self.show_fft()
@@ -101,8 +104,8 @@ class Controller():
         t_work = time.time() - t_work
         print("Время анализатора ошибок: ", t_work * 1000000, " мкс")
 
-#------------------------------------------------------------------------------
-# Блок приёмников
+    # ------------------------------------------------------------------------------
+    # Блок приёмников
 
     def change_transmitter(self):
         # Коррелятор
@@ -125,8 +128,8 @@ class Controller():
 
         # Некогерентный приём
         if self.__show_block.kog.isChecked():
-            self.proc.ReceiveV2(self.line.signal.data[0, :], 
-                                self.devia, 
+            self.proc.ReceiveV2(self.line.signal.data[0, :],
+                                self.devia,
                                 self.phase)
             if self.modem.number == 2:
                 signal = np.array([self.line.signal.data[1, :],
@@ -135,7 +138,7 @@ class Controller():
                 self.__conv_plot.DrawPlots(signal, visual, 0)
             else:
                 signal = np.array([self.line.signal.data[1, :],
-                                   self.proc.sgn_mul, 
+                                   self.proc.sgn_mul,
                                    self.proc.convolution,
                                    self.proc.sgn_mul_Q,
                                    self.proc.convolution_Q])
@@ -144,7 +147,7 @@ class Controller():
 
         # Когерентный приём
         else:
-            self.proc.Receive(self.line.signal.data[0, :])# , self.devia, self.phase)
+            self.proc.Receive(self.line.signal.data[0, :])  # , self.devia, self.phase)
             signal = np.array([self.line.signal.data[1, :],
                                self.proc.sgn_mul,
                                self.proc.convolution])
@@ -156,14 +159,14 @@ class Controller():
         self.__conv_plot.setVisible(0)
         # Расчет созвездия для всех символов
         self.stars_out = FindStar(self.line.signal,
-                                  osc_per_sym, 
-                                  self.devia, 
+                                  osc_per_sym,
+                                  self.devia,
                                   self.phase).stars()
         self.__star_plot.draw_plot(self.stars_out)
         self.__star_plot.add_demodul(self.choose_modul.currentText())
 
-#------------------------------------------------------------------------------
-# Блок изменения визуализации окна
+    # ------------------------------------------------------------------------------
+    # Блок изменения визуализации окна
 
     def show_fft(self):
         self.__show_block.fft.setEnabled(1)
@@ -178,7 +181,7 @@ class Controller():
             """ Построение спектра (Точки во времени, \
                 Частота дискретизации, Отображаемая частота) """
             self.__fft_plot.draw_plot(self.line.signal.data[0, 0:num_points], \
-                discret_freq, self.freq * 2)
+                                      discret_freq, self.freq * 2)
 
             # Показ спектра
             self.__fft_plot.setVisible(1)
@@ -194,7 +197,7 @@ class Controller():
             self.__show_block.kog.setEnabled(0)
         elif self.choose_transmitter.currentText() == "Согласованный фильтр":
             self.__show_block.kog.setEnabled(1)
-    
+
     def show_ber(self):
         if self.__show_block.kog.isChecked():
             self.__show_block.ber.setEnabled(1)
@@ -205,46 +208,46 @@ class Controller():
     def show_param(self):
         self.__noise_block.setEnabled(1)
         if self.choose_line.currentText() == "Канал без искажений" or \
-           self.choose_line.currentText() == "Линейные искажения":
+                self.choose_line.currentText() == "Линейные искажения":
             self.__noise_block.setEnabled(0)
-            self.__noise_block.configure(label = "", value = 0)
+            self.__noise_block.configure(label="", value=0)
         elif self.choose_line.currentText() == "Гауссовская помеха":
-            self.__noise_block.configure(label = "С/Ш (разы)", 
-                                         borders = [0, 100],
-                                         value = 10,
-                                         step = 0.1)
+            self.__noise_block.configure(label="С/Ш (дБ)",
+                                         borders=[-100, 100],
+                                         value=10,
+                                         step=0.1)
         elif self.choose_line.currentText() == "Релеевские замирания":
-            self.__noise_block.configure(label = "Интервал корреляции",
-                                         borders = [0, 32],
-                                         value = 1,
-                                         step = 0.1)
+            self.__noise_block.configure(label="Интервал корреляции",
+                                         borders=[0, 32],
+                                         value=1,
+                                         step=0.1)
         elif self.choose_line.currentText() == "Гармоническая помеха":
-            self.__noise_block.configure(label = "Сдвиг фаз (град)",
-                                         borders = [-180, 180],
-                                         value = 30,
-                                         step = 10)
+            self.__noise_block.configure(label="Сдвиг фаз (град)",
+                                         borders=[-180, 180],
+                                         value=30,
+                                         step=10)
 
     def show_error(self):
         self.__error_block.setEnabled(1)
         if self.choose_sync.currentText() == "Когерентный приём":
             self.__error_block.setEnabled(0)
-            self.__error_block.configure(label = "", value = 0)
+            self.__error_block.configure(label="", value=0)
         elif self.choose_sync.currentText() == "Расстройка по частоте":
-            self.__error_block.configure(label = "Коэф. растройки", 
-                                         value = 0.1,
-                                         borders = [-0.9, 5],
-                                         step = 0.01)
+            self.__error_block.configure(label="Коэф. растройки",
+                                         value=0.1,
+                                         borders=[-0.9, 5],
+                                         step=0.01)
         elif self.choose_sync.currentText() == "Фазовая расстройка":
-            self.__error_block.configure(label = "Нач. фаза", 
-                                         value = 10,
-                                         borders = [-180, 180],
-                                         step = 10)
-            
-#-----------------------------------------------------------------------------
+            self.__error_block.configure(label="Нач. фаза",
+                                         value=10,
+                                         borders=[-180, 180],
+                                         step=10)
+
+    # -----------------------------------------------------------------------------
 
     def decoder(self, visual):
-        if self.__show_block.kog.isChecked(): # self.__show_block.ber.isChecked() and 
-            decoder = NoCogDecisiveDevice(self.stars_out, 
+        if self.__show_block.kog.isChecked():  # self.__show_block.ber.isChecked() and
+            decoder = NoCogDecisiveDevice(self.stars_out,
                                           self.choose_modul.currentText())
             self.__osc_plot.draw_bit(decoder.bits[0:visual], 1)
             bit_error = Compare(np.ravel(self.modem.mod_code), np.ravel(decoder.bits))
@@ -252,15 +255,15 @@ class Controller():
             self.__show_block.label.setText("Pош = {:.4}".format(bit_error.result))
 
     def config_trans(self):
-        self.devia = 0               # Расстройка частоты
-        self.phase = 0               # Расстройка фазы
+        self.devia = 0  # Расстройка частоты
+        self.phase = 0  # Расстройка фазы
         if self.choose_sync.currentText() == "Расстройка по частоте":
             self.devia = self.__error_block.noise_factor_spinbox.value()
         elif self.choose_sync.currentText() == "Фазовая расстройка":
             self.phase = np.deg2rad(self.__error_block.noise_factor_spinbox.value())
 
     def show_osc(self, visual, bits):
-        self.show_signal = self.line.signal.data[:, 
-                                              0:int(visual * self.modem.unit_dots)]
+        self.show_signal = self.line.signal.data[:,
+                           0:int(visual * self.modem.unit_dots)]
         self.__osc_plot.draw_plot(self.show_signal)
         self.__osc_plot.draw_div(np.array(bits[0:visual]))

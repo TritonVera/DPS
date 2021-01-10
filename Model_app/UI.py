@@ -6,16 +6,17 @@ Created on Sat Feb 29 15:10:12 2020
 @author: Ivan
 """
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QSizePolicy, \
-                            QMessageBox, QWidget, QGroupBox, QRadioButton, \
-                            QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
-                            QDoubleSpinBox, QCheckBox, QSpinBox, QComboBox
+    QMessageBox, QWidget, QGroupBox, QRadioButton, \
+    QVBoxLayout, QLabel, QHBoxLayout, QPushButton, \
+    QDoubleSpinBox, QCheckBox, QSpinBox, QComboBox
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPalette
 from ExtUI import PlotPanel, StarPanel, ConvPanel, FftPanel
 
 MAX_PIXEL_SIZE = 16777215
 
-#Класс главного окна
+
+# Класс главного окна
 class DemoWindow(QMainWindow):
     def __init__(self):
         # Конструктор
@@ -44,42 +45,42 @@ class DemoWindow(QMainWindow):
 
         # Блок создания приемника и сигнала (ряд 1)
         # Выбор типа приемника
-        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника", 
-                                    ["Созвездия сигнала",
-                                     "Корреляционный приёмник"])
+        self.transmitter_panel = ChangePanel(self.main_widget, "Тип приемника",
+                                             ["Созвездия сигнала",
+                                              "Корреляционный приёмник"])
         self.main_grid.addWidget(self.transmitter_panel, 0, 0)
 
         # Выбор типа модуляции
-        self.modul_panel = ChangePanel(self.main_widget, "Тип модуляции", 
-                                    ["2-ФМ", 
-                                     "4-ФМ", 
-                                     "4-ФМ со сдвигом", 
-                                     "8-ФМ", 
-                                     "8-АФМ",
-                                     "16-АФМ",
-                                     "16-КАМ",
-                                     "ЧМ",
-                                     "ММС"])
+        self.modul_panel = ChangePanel(self.main_widget, "Тип модуляции",
+                                       ["2-ФМ",
+                                        "4-ФМ",
+                                        "4-ФМ со сдвигом",
+                                        "8-ФМ",
+                                        "8-АФМ",
+                                        "16-АФМ",
+                                        "16-КАМ",
+                                        "ЧМ",
+                                        "ММС"])
         self.main_grid.addWidget(self.modul_panel, 0, 1)
 
         # Тип канала связи
-        self.line_panel = ChangePanel(self.main_widget, "Тип канала связи", 
-                                    ["Канал без искажений", 
-                                     "Гауссовская помеха", 
-                                     "Линейные искажения", 
-                                     "Гармоническая помеха", 
-                                     "Релеевские замирания"])
+        self.line_panel = ChangePanel(self.main_widget, "Тип канала связи",
+                                      ["Канал без искажений",
+                                       "Гауссовская помеха",
+                                       "Линейные искажения",
+                                       "Гармоническая помеха",
+                                       "Релеевские замирания"])
         self.main_grid.addWidget(self.line_panel, 0, 2)
 
         # Тип синхронизации
-        self.error_panel = ChangePanel(self.main_widget, "Синхронизация", 
-                                    ["Без расстройки", 
-                                     "Расстройка по частоте", 
-                                     "Фазовая расстройка"])
+        self.error_panel = ChangePanel(self.main_widget, "Синхронизация",
+                                       ["Без расстройки",
+                                        "Расстройка по частоте",
+                                        "Фазовая расстройка"])
         self.main_grid.addWidget(self.error_panel, 0, 3)
 
-# self.signal_panel = SignalPanel(self.main_widget)
-# self.main_grid.addWidget(self.signal_panel, 1, 0)
+        # self.signal_panel = SignalPanel(self.main_widget)
+        # self.main_grid.addWidget(self.signal_panel, 1, 0)
 
         # Блок настройки (ряд 2)
         # Настройка показа преобразования Фурье и вероятности ошибки
@@ -90,7 +91,7 @@ class DemoWindow(QMainWindow):
         self.nf_panel = NFPanel(self.main_widget)
         self.nf_panel.setEnabled(0)
         self.main_grid.addWidget(self.nf_panel, 1, 2)
-        
+
         # Настройка параметров расстройки
         self.devia_panel = NFPanel(self.main_widget)
         self.devia_panel.setEnabled(0)
@@ -105,7 +106,7 @@ class DemoWindow(QMainWindow):
         self.star_panel = StarPanel(self.main_widget)
         self.star_panel.setVisible(0)
         self.main_grid.addWidget(self.star_panel, 2, 2, 2, 2)
-        
+
         # График корреляции
         self.conv_panel = ConvPanel(self.main_widget)
         self.conv_panel.setVisible(0)
@@ -126,26 +127,27 @@ class DemoWindow(QMainWindow):
     def about(self):
         # Пасхалка о создателях проги :)
         QMessageBox.about(self, "About",
-                                    """Embedding_in_qt5.py demonstartion
+                          """Embedding_in_qt5.py demonstartion
 Copyright 2020 Ivan Fomin, 2020 Grigory Galchenkov
 
 This program is a demonstration of excite signal in receiver.
 
 It may be used and modified with no restriction; raw copies as well as
 modified versions may be distributed without limitation."""
-                                )
+                          )
+
 
 # Классы визуальных объектов
 class ChangePanel(QWidget):
-    def __init__(self, parent = None, name = "", combo_box = []):
+    def __init__(self, parent=None, name="", combo_box=[]):
         QWidget.__init__(self, parent)
         QWidget.setMinimumWidth(self, 200)
         QWidget.setFixedHeight(self, 120)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        #Make main layout packer
+        # Make main layout packer
         inner_grid_layout = QGridLayout(self)
-        
+
         # Create elements
         self.name_label = QLabel(name, self)
         self.name_label.setFixedSize(150, 15)
@@ -153,23 +155,23 @@ class ChangePanel(QWidget):
         self.combobox = QComboBox(self)
         self.combobox.addItems(combo_box)
 
-        #Pack radiobuttons
+        # Pack radiobuttons
         inner_grid_layout.addWidget(self.name_label, 0, 0)
         inner_grid_layout.addWidget(self.combobox, 1, 0)
 
-        #Ending packers
+        # Ending packers
         self.setLayout(inner_grid_layout)
 
 
 class ShowPanel(QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         # QWidget.setFixedHeight(self, 90)
 
         # Configure size policy
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        #Make main layout packer
+        # Make main layout packer
         inner_grid_layout = QVBoxLayout(self)
 
         self.fft = QCheckBox("Преобразование Фурье", self)
@@ -186,19 +188,19 @@ class ShowPanel(QWidget):
         inner_grid_layout.addWidget(self.ber)
         inner_grid_layout.addWidget(self.label)
 
-        #Ending packers
+        # Ending packers
         self.setLayout(inner_grid_layout)
 
 
 class NFPanel(QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         # QWidget.setFixedHeight(self, 90)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        #Make main layout packer
+        # Make main layout packer
         inner_grid_layout = QHBoxLayout(self)
-        
+
         self.noise_label = QLabel("", self)
 
         self.noise_factor_spinbox = QDoubleSpinBox(self)
@@ -206,33 +208,33 @@ class NFPanel(QWidget):
         self.noise_factor_spinbox.setRange(0, 100)
         self.noise_factor_spinbox.setSingleStep(1)
 
-        # Pack elememnts
+        # Pack elements
         inner_grid_layout.addWidget(self.noise_label)
         inner_grid_layout.addWidget(self.noise_factor_spinbox)
 
-        #Ending packers
+        # Ending packers
         self.setLayout(inner_grid_layout)
-        
-    def configure(self, label = None, borders = [], value = None, step = None):
-        if label != None:
+
+    def configure(self, label=None, borders=[], value=None, step=None):
+        if label:
             self.noise_label.setText(label)
-        if borders != []:
+        if not borders == []:
             self.noise_factor_spinbox.setRange(borders[0], borders[1])
-        if value != None:
+        if value:
             self.noise_factor_spinbox.setValue(value)
-        if step != None:
+        if step:
             self.noise_factor_spinbox.setSingleStep(step)
-            
+
 
 class SignalPanel(QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         QWidget.setMinimumSize(self, 200, 150)
         QWidget.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        #Make main layout packer
+        # Make main layout packer
         inner_grid_layout = QGridLayout(self)
-        
+
         self.time_label = QLabel("Время сигнала, нс", self)
 
         self.time_spinbox = QDoubleSpinBox(self)
@@ -254,12 +256,12 @@ class SignalPanel(QWidget):
         inner_grid_layout.addWidget(self.freq_label, 1, 0)
         inner_grid_layout.addWidget(self.freq_spinbox, 1, 1)
 
-        #Ending packers
+        # Ending packers
         self.setLayout(inner_grid_layout)
 
 
 class ButtonPanel(QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.setMaximumSize(MAX_PIXEL_SIZE, MAX_PIXEL_SIZE)
         self.setSizePolicy(QSizePolicy.Expanding,
