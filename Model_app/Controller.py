@@ -52,6 +52,9 @@ class Controller:
 
         # Общий блок модулятора (Блоки 1 и 2)
         self.modulation()
+        self.__conv_plot.setVisible(0)
+        self.__star_plot.setVisible(0)
+        self.__osc_plot.setVisible(0)
 
         for n in ber_range:
             print(n)
@@ -79,6 +82,7 @@ class Controller:
     def plot_view(self):
         # Общий блок модулятора (Блоки 1 и 2)
         self.modulation()
+        self.__osc_plot.setVisible(1)
 
         # 3. Отработка линии связи
         t_work = time.time()
@@ -115,17 +119,14 @@ class Controller:
 
         # 8. Визуализация в программе
         t_work = time.time()
-        self.show_osc(self.symbols,
-                      self.modem.mod_code)
+        self.show_info(self.symbols, self.modem.mod_code)
         t_work = time.time() - t_work
         print("Время отображения на графике: ", t_work * 1000000, " мкс")
 
     # ------------------------------------------------------------------------------
     # Блок приёмников
     # Построение корреляции TODO
-    def plot_corr(self, visual):
-        visual = visual * self.modem.unit_dots
-
+    def plot_corr(self):
         # Некогерентный приём
         if self.__show_block.kog.isChecked():
             self.proc.ReceiveV2(self.line.signal.data[0, :],
@@ -133,30 +134,41 @@ class Controller:
                                 self.phase)
             if self.modem.number == 2:
                 self.signal_out = np.array([self.line.signal.data[1, :],
-                                   self.proc.sgn_mul,
-                                   self.proc.convolution])
+                                            self.proc.sgn_mul,
+                                            self.proc.convolution])
             else:
                 self.signal_out = np.array([self.line.signal.data[1, :],
-                                   self.proc.sgn_mul,
-                                   self.proc.convolution,
-                                   self.proc.sgn_mul_Q,
-                                   self.proc.convolution_Q])
+                                            self.proc.sgn_mul,
+                                            self.proc.convolution,
+                                            self.proc.sgn_mul_Q,
+                                            self.proc.convolution_Q])
             self.stars_out = self.proc.data
 
         # Когерентный приём
         else:
             self.proc.Receive(self.line.signal.data[0, :])  # , self.devia, self.phase)
             self.signal_out = np.array([self.line.signal.data[1, :],
-                               self.proc.sgn_mul,
-                               self.proc.convolution])
+                                        self.proc.sgn_mul,
+                                        self.proc.convolution])
 
     # Построение созвездия
     def plot_star(self, osc_per_sym):
         # Расчет созвездия для всех символов
-        self.stars_out = FindStar(self.line.signal,
-                                  osc_per_sym,
-                                  self.deviate,
-                                  self.phase).stars()
+        if self.choose_module.currentText() == "ЧМ":
+            self.stars_out = FindStar(self.line.signal,
+                                      osc_per_sym,
+                                      self.deviate,
+                                      self.phase).stars_fm(self.modem.unit_time)
+        elif self.choose_module.currentText() == "Ортогональный ЧМ":
+            self.stars_out = FindStar(self.line.signal,
+                                      osc_per_sym,
+                                      self.deviate,
+                                      self.phase).stars_fm(self.modem.unit_time, 1)
+        else:
+            self.stars_out = FindStar(self.line.signal,
+                                      osc_per_sym,
+                                      self.deviate,
+                                      self.phase).stars()
 
     # ------------------------------------------------------------------------------
     # Модулирование сигнала (Блоки обработки 1 и 2)
@@ -202,7 +214,7 @@ class Controller:
                                     Отображаемая частота) """
             self.__fft_plot.draw_plot(self.line.signal.data[0, 0:num_points],
                                       discret_freq,
-                                      self.freq * 2)
+                                      self.freq * 4)
             # Показ спектра
             self.__fft_plot.setVisible(1)
         else:
@@ -274,7 +286,7 @@ class Controller:
     def change_transmitter(self):
         # Коррелятор
         if self.choose_transmitter.currentText() == "Корреляционный приёмник":
-            self.plot_corr(self.symbols)
+            self.plot_corr()
 
         # Созвездие сигнала (только некогерентный приём)
         elif self.choose_transmitter.currentText() == "Созвездия сигнала":
@@ -292,7 +304,7 @@ class Controller:
 
             self.__show_block.label.setText(f"Pош = {self.error:.4}")
 
-    def show_osc(self, visual, bits):
+    def show_info(self, visual, bits):
         self.show_signal = self.line.signal.data[:,
                            0:int(visual * self.modem.unit_dots)]
         self.__osc_plot.draw_plot(self.show_signal)
@@ -304,11 +316,10 @@ class Controller:
             self.__star_plot.add_demodul(self.choose_module.currentText())
             self.__conv_plot.setVisible(0)
         elif self.choose_transmitter.currentText() == "Корреляционный приёмник":
+            visual = visual * self.modem.unit_dots
             self.__star_plot.setVisible(0)
             self.__conv_plot.setVisible(1)
-            if self.__show_block.kog.isChecked() or self.modem.number != 2:
+            if self.__show_block.kog.isChecked() and self.modem.number != 2:
                 self.__conv_plot.DrawPlots(self.signal_out, visual, 1)
             else:
                 self.__conv_plot.DrawPlots(self.signal_out, visual, 0)
-
-

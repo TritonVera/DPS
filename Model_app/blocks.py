@@ -43,6 +43,10 @@ def change_module(modem, osc_per_sym, freq, sym_number, modulation):
         modem.number = 2
         modem.FM()
 
+    elif modulation == "Ортогональный ЧМ":
+        modem.number = 2
+        modem.OFM()
+
     elif modulation == "ММС":
         modem.number = 2
         modem.FM()

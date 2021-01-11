@@ -236,7 +236,7 @@ class Modem(Model):
         for i in range(0, len(self.mod_code)):  # Схема аналогична PM
 
             state = self.State(self.mod_code[i])
-            deviation = (-1 + 2 * state) * self.signal.frequency / 4  # Отличие: вместо фазы меняется частота
+            deviation = (1 - 2 * state) * self.signal.frequency / 4  # Отличие: вместо фазы меняется частота
 
             for j in range(0, self.unit_dots):
                 now = self.signal.now(j) + i * self.unit_time
@@ -244,6 +244,18 @@ class Modem(Model):
 
     def OFM(self):
         self.Init()
+        for i in range(len(self.mod_code)):
+            state = self.State(self.mod_code[i])
+            deviation = 2 * state / self.unit_time
+            
+            times = np.linspace(i * self.unit_time,
+                                (i + 1) * self.unit_time,
+                                self.unit_dots, 0)
+            calc_block = Garmonic(
+                in_i=1,
+                in_f=self.signal.frequency + deviation,
+                in_time=times).calc_with_time()
+            self.signal.data = np.hstack((self.signal.data, calc_block))
 
     # ------------------------------------------------------------------------------
     # Сигнал с минимальным сдвигом:

@@ -138,8 +138,8 @@ class FftPanel(QWidget):
         # Удаление лишних точек
         mid_point = int(border / step)
         show_point = int(freq_show / step)
-        y_list = y_list[int(np.floor(mid_point - show_point)):int(np.ceil(mid_point + show_point))]
-        x_list = np.linspace(-freq_show, freq_show, y_list.size)
+        y_list = y_list[int(np.floor(mid_point)):int(np.ceil(mid_point + show_point))]
+        x_list = np.linspace(0, freq_show, y_list.size)
 
         # Самописный движок масштаба
         ScaleEngine(self.plot, y=y_list)
@@ -324,6 +324,27 @@ class StarPanel(QWidget):
                 marker[i].setPen(l_pen)
                 marker[i].attach(self.plot)
 
+        elif mod == "ЧМ" or mod == "Ортогональный ЧМ":
+            scale = self.engine.max_value_y
+            marker = QwtPlotCurve()
+
+            marker.setData([-scale, scale],
+                           [-scale, scale])
+            marker.setPen(l_pen)
+            marker.attach(self.plot)
+
+            pos = [0, scale * (3.5 / 5)]
+            first_symbol = QwtPlotMarker()
+            first_symbol.setValue(pos[0], pos[1])
+            first_symbol.setLabel("1")
+            first_symbol.attach(self.plot)
+
+            pos = [scale * (3.5 / 5), 0]
+            second_symbol = QwtPlotMarker()
+            second_symbol.setValue(pos[0], pos[1])
+            second_symbol.setLabel("0")
+            second_symbol.attach(self.plot)
+
 
 class ConvPanel(QWidget):
     def __init__(self, parent=None):
@@ -368,7 +389,7 @@ class ConvPanel(QWidget):
         self.setLayout(vertical_layout)
 
     def DrawPlots(self, points=[], num_of_points=0, mode=0):
-        if points == []:
+        if not points:
             return
 
         self.line_pen = QPen(QColor(0, 0, 0))
@@ -437,10 +458,10 @@ class ConvPanel(QWidget):
 
     def two_graph(self, points):
         time = points[0]
-        sqrt_1 = points[1]
-        conv_1 = points[2]
-        sqrt_2 = points[3]
-        conv_2 = points[4]
+        # sqrt_1 = points[1]
+        # conv_1 = points[2]
+        # sqrt_2 = points[3]
+        # conv_2 = points[4]
 
         sqrt_1_offset = np.max(np.abs(points[1])) + 1
         conv_1_offset = np.max(np.abs(points[2])) + 1

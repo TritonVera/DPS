@@ -32,6 +32,9 @@ class NoCogDecisiveDevice():
         elif modul == "ЧМ":
             self.bits = np.zeros((points.size,1))
             self.FM()
+        elif modul == "Ортогональный ЧМ":
+            self.bits = np.zeros((points.size,1))
+            self.FM()
         elif modul == "ММС":
             self.bits = np.zeros((points.size,1))
             self.MPS()
@@ -165,7 +168,11 @@ class NoCogDecisiveDevice():
                     self.bits[i] = [1, 1, 1, 1]
 
     def FM(self):
-        pass
+        for i in range(self.points.size):
+            if self.points[i].imag - self.points[i].real > 0:
+                self.bits[i] = [1]
+            else:
+                self.bits[i] = [0]
 
     def MPS(self):
         pass

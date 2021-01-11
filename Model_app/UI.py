@@ -60,6 +60,7 @@ class DemoWindow(QMainWindow):
                                         "16-АФМ",
                                         "16-КАМ",
                                         "ЧМ",
+                                        "Ортогональный ЧМ",
                                         "ММС"])
         self.main_grid.addWidget(self.modul_panel, 0, 1)
 

@@ -132,40 +132,71 @@ class FindStar:
     def __init__(self, input_signal, osc_per_sym=2, devia=0.0, phase=0):
         # Init new input signal and output
         self.signal = input_signal
+        self.deviation = devia
+        self.phase = phase
         self.input = np.array(self.signal.data[0, :])
 
         # Расчет времени и числа точек на символ для инициализации опорного сигнала
         self.time_to_block = osc_per_sym / self.signal.frequency
         self.point_to_block = self.signal.dots_num(self.time_to_block)
 
-        # Генерация опорного сигнала
+        # Генерация опорного сигнала TODO
         self.times = np.linspace(0, self.time_to_block, self.point_to_block, 0)
-        self.ref = Garmonic(in_i=1,
-                            in_f=(1 + devia) * self.signal.frequency,
-                            in_phase=phase,
-                            in_time=self.times).calc() + \
-                   (1j * Garmonic(in_q=1,
-                                  in_f=(1 + devia) * self.signal.frequency,
-                                  in_phase=phase,
-                                  in_time=self.times).calc())
 
     # ------------------------------------------------------------------------------
     # Посимвольный квадратурный корреляционный приёмник
     # Каждый символ синхронизирован с его началом и концом
     def stars(self):
+        ref = Garmonic(in_i=1,
+                       in_f=(1 + self.deviation) * self.signal.frequency,
+                       in_phase=self.phase,
+                       in_time=self.times).calc() + \
+              (1j * Garmonic(in_q=1,
+                             in_f=(1 + self.deviation) * self.signal.frequency,
+                             in_phase=self.phase,
+                             in_time=self.times).calc())
+
         # Расчет общего числа символов
         num_of_blocks = int(self.signal.dots / self.point_to_block)
 
         # Инициализация комплексного вектора
-        coords = np.zeros(num_of_blocks, dtype=np.complex)
+        coordinates = np.zeros(num_of_blocks, dtype=np.complex)
 
         # Проходимся по каждому символу и интегрируем произведение опорного и 
         # пришедшего символа
         for i in np.arange(num_of_blocks):
-            s = self.input[(i * self.point_to_block): \
+            s = self.input[(i * self.point_to_block):
                            ((i + 1) * self.point_to_block)]
-            coords[i] = 2 * (np.trapz(s * self.ref.real) + \
-                             (1j * np.trapz(s * self.ref.imag))) / self.point_to_block  # Нормирующий костыль,
+            coordinates[i] = 2 * (np.trapz(s * ref.real) +
+                                  (1j * np.trapz(s * ref.imag))) / self.point_to_block  # Нормирующий костыль,
             # чтобы нормировать энергию
             # на выходе интегратора
-        return coords
+        return coordinates
+
+    def stars_fm(self, shift, central=0):
+        if central:
+            freq_1 = (1 + self.deviation) * self.signal.frequency
+            freq_2 = (1 + self.deviation) * self.signal.frequency + 2 / shift
+        else:
+            freq_1 = (1 + self.deviation) * self.signal.frequency - 1 / (shift * 2)
+            freq_2 = (1 + self.deviation) * self.signal.frequency + 1 / (shift * 2)
+        ref_1 = Garmonic(in_i=1,
+                         in_f=freq_1,
+                         in_phase=self.phase,
+                         in_time=self.times).calc()
+        ref_2 = Garmonic(in_i=1,
+                         in_f=freq_2,
+                         in_phase=self.phase,
+                         in_time=self.times).calc()
+        # Расчет общего числа символов
+        num_of_blocks = int(self.signal.dots / self.point_to_block)
+
+        # Инициализация комплексного вектора
+        coordinates = np.zeros(num_of_blocks, dtype=np.complex)
+
+        for i in np.arange(num_of_blocks):
+            s = self.input[(i * self.point_to_block):
+                           ((i + 1) * self.point_to_block)]
+            coordinates[i] = 2 * (np.abs(np.trapz(s * ref_1)) +
+                                  (1j * np.abs(np.trapz(s * ref_2)))) / self.point_to_block
+        return coordinates
