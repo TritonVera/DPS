@@ -1,7 +1,7 @@
-from numpy import pi, log10, sqrt
+from numpy import pi, sqrt
 
 
-def change_modul(modem, osc_per_sym, freq, sym_number, modulation):
+def change_module(modem, osc_per_sym, freq, sym_number, modulation):
     # Начальная настройка модулятора (TODO Кнопочки и крутилки)
     modem.signal.frequency = freq
     modem.signal.phase = 0  # Начальная фаза сигнала
@@ -59,11 +59,18 @@ def change_line(line, input_signal, channel, noise_factor, add_snr=None):
             type_of_line='simple')
 
     elif channel == "Гауссовская помеха":
-        line.change_parameters(
-            input_signal=input_signal,
-            type_of_line='gauss',
-            dispersion=sigma(dispersion, noise_factor),
-            mu=0)
+        if add_snr is not None:
+            line.change_parameters(
+                input_signal=input_signal,
+                type_of_line='gauss',
+                dispersion=sigma(dispersion, add_snr),
+                mu=0)
+        else:
+            line.change_parameters(
+                input_signal=input_signal,
+                type_of_line='gauss',
+                dispersion=sigma(dispersion, noise_factor),
+                mu=0)
 
     elif channel == "Релеевские замирания":
         line.change_parameters(

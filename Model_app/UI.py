@@ -273,13 +273,13 @@ class ButtonPanel(QWidget):
         box_layout = QVBoxLayout(button_box)
 
         # Create buttons
-        # self.exit_button = QPushButton("Выход", button_box)
+        self.curve_button = QPushButton("Кривая вероятности", button_box)
         self.about_button = QPushButton("О программе", button_box)
         self.plot_button = QPushButton("Построить", button_box)
 
         # Add to layout
         box_layout.addWidget(self.plot_button)
-        # box_layout.addWidget(self.exit_button)
+        box_layout.addWidget(self.curve_button)
         box_layout.addWidget(self.about_button)
         button_box.setLayout(box_layout)
 

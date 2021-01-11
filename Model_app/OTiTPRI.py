@@ -14,6 +14,7 @@ manage = Controller(ui, Modem(), CommLine(), Processor())
 
 # Кнопочки
 ui.button_panel.plot_button.clicked.connect(manage.plot_view)
+ui.button_panel.curve_button.clicked.connect(manage.curve_view)
 ui.button_panel.about_button.clicked.connect(ui.about)
 
 # Изменение визуализации из-за выбора определенных параметров
