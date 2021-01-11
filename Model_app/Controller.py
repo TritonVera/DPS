@@ -19,6 +19,7 @@ class Controller:
         # Выходной параметр
         self.stars_out = []
         self.show_signal = []
+        self.signal_out = []
         self.bits_out = []
         self.error = 0
 
@@ -123,8 +124,6 @@ class Controller:
     # Блок приёмников
     # Построение корреляции TODO
     def plot_corr(self, visual):
-        self.__star_plot.setVisible(0)
-        self.__conv_plot.setVisible(1)
         visual = visual * self.modem.unit_dots
 
         # Некогерентный приём
@@ -133,38 +132,31 @@ class Controller:
                                 self.deviate,
                                 self.phase)
             if self.modem.number == 2:
-                signal = np.array([self.line.signal.data[1, :],
+                self.signal_out = np.array([self.line.signal.data[1, :],
                                    self.proc.sgn_mul,
                                    self.proc.convolution])
-                self.__conv_plot.DrawPlots(signal, visual, 0)
             else:
-                signal = np.array([self.line.signal.data[1, :],
+                self.signal_out = np.array([self.line.signal.data[1, :],
                                    self.proc.sgn_mul,
                                    self.proc.convolution,
                                    self.proc.sgn_mul_Q,
                                    self.proc.convolution_Q])
-                self.__conv_plot.DrawPlots(signal, visual, 1)
             self.stars_out = self.proc.data
 
         # Когерентный приём
         else:
             self.proc.Receive(self.line.signal.data[0, :])  # , self.devia, self.phase)
-            signal = np.array([self.line.signal.data[1, :],
+            self.signal_out = np.array([self.line.signal.data[1, :],
                                self.proc.sgn_mul,
                                self.proc.convolution])
-            self.__conv_plot.DrawPlots(signal, visual, 0)
 
     # Построение созвездия
     def plot_star(self, osc_per_sym):
-        self.__star_plot.setVisible(1)
-        self.__conv_plot.setVisible(0)
         # Расчет созвездия для всех символов
         self.stars_out = FindStar(self.line.signal,
                                   osc_per_sym,
                                   self.deviate,
                                   self.phase).stars()
-        self.__star_plot.draw_plot(self.stars_out)
-        self.__star_plot.add_demodul(self.choose_module.currentText())
 
     # ------------------------------------------------------------------------------
     # Модулирование сигнала (Блоки обработки 1 и 2)
@@ -205,11 +197,11 @@ class Controller:
             num_points = int(100 * self.modem.unit_dots)
 
             # Расчет и построение спектра
-            """ Построение спектра (Частота дискретизации,
-                                    Точки во времени,
+            """ Построение спектра (Точки во времени,
+                                    Частота дискретизации,
                                     Отображаемая частота) """
-            self.__fft_plot.draw_plot(discret_freq,
-                                      self.line.signal.data[0, 0:num_points],
+            self.__fft_plot.draw_plot(self.line.signal.data[0, 0:num_points],
+                                      discret_freq,
                                       self.freq * 2)
             # Показ спектра
             self.__fft_plot.setVisible(1)
@@ -306,3 +298,17 @@ class Controller:
         self.__osc_plot.draw_plot(self.show_signal)
         self.__osc_plot.draw_div(np.array(bits[0:visual]))
         self.__osc_plot.draw_bit(self.bits_out[0:visual], 1)
+        if self.choose_transmitter.currentText() == "Созвездия сигнала":
+            self.__star_plot.setVisible(1)
+            self.__star_plot.draw_plot(self.stars_out)
+            self.__star_plot.add_demodul(self.choose_module.currentText())
+            self.__conv_plot.setVisible(0)
+        elif self.choose_transmitter.currentText() == "Корреляционный приёмник":
+            self.__star_plot.setVisible(0)
+            self.__conv_plot.setVisible(1)
+            if self.__show_block.kog.isChecked() or self.modem.number != 2:
+                self.__conv_plot.DrawPlots(self.signal_out, visual, 1)
+            else:
+                self.__conv_plot.DrawPlots(self.signal_out, visual, 0)
+
+
